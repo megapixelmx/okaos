@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKAOs - Play</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+    <link class="mcpixel-logo-ref" rel="icon" type="image/jpg" href="../img/logo.jpg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Black', 'Impact', sans-serif;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        img {
+            pointer-events: none;
+        }
+        body {
+            background: url('../img/fn/f1.jpg') no-repeat center center/cover;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+        .bg-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            display: none;
+        }
+        .lobby-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            z-index: 10;
+            background: url('../img/fn/f1.jpg') no-repeat center center/cover;
+        }
+        .left-slash-partition {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 20, 0.95) 75%, transparent 75.1%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 8%;
+            position: relative;
+        }
+        .logo-container {
+            max-width: 280px;
+            margin-bottom: 30px;
+        }
+        .logo-container img {
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0px 5px 15px rgba(0,0,0,0.6));
+        }
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .btn-mode {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #ffffff;
+            cursor: pointer;
+            position: relative;
+            height: 70px;
+            width: 420px;
+            transition: transform 0.1s ease;
+        }
+        .btn-mode .icon-wrapper {
+            width: 75px;
+            height: 100%;
+            background: #262626;
+            border: 4px solid #ffffff;
+            transform: skewX(-25deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 3;
+            box-shadow: -5px 5px 0px rgba(0,0,0,0.5);
+            transition: background-color 0.1s ease, border-color 0.1s ease;
+        }
+        .btn-mode .icon-wrapper img,
+        .btn-mode .icon-wrapper svg {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            transform: skewX(25deg);
+            fill: #ffffff;
+            transition: filter 0.1s ease, fill 0.1s ease;
+        }
+        .btn-mode .slash-fold {
+            width: 25px;
+            height: 100%;
+            background: #0f0f0f;
+            transform: skewX(-25deg);
+            margin-left: -10px;
+            z-index: 2;
+            border-top: 4px solid #ffffff;
+            border-bottom: 4px solid #ffffff;
+            transition: background-color 0.1s ease, border-color 0.1s ease;
+        }
+        .btn-mode .text-wrapper {
+            flex: 1;
+            height: 100%;
+            background: #141414;
+            border: 4px solid #ffffff;
+            border-left: none;
+            transform: skewX(-25deg);
+            margin-left: -10px;
+            display: flex;
+            align-items: center;
+            padding-left: 25px;
+            z-index: 1;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+            transition: background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+        }
+        .btn-mode span {
+            transform: skewX(25deg);
+            font-weight: 900;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+            transition: text-shadow 0.1s ease;
+        }
+        .btn-mode:hover {
+            transform: scale(1.03) translate3d(5px, 0, 0);
+        }
+        .btn-mode:hover .icon-wrapper {
+            background-color: #ffffff;
+            border-color: #000000;
+        }
+        .btn-mode:hover .icon-wrapper img {
+            filter: brightness(0);
+        }
+        .btn-mode:hover .icon-wrapper svg {
+            fill: #000000;
+        }
+        .btn-mode:hover .slash-fold {
+            background-color: #e0e0e0;
+            border-color: #000000;
+        }
+        .btn-mode:hover .text-wrapper {
+            background-color: #ffffff;
+            border-color: #000000;
+            color: #000000;
+        }
+        .btn-mode:hover span {
+            text-shadow: none;
+        }
+        @keyframes select-pulse {
+            0% { transform: scale(1.03) translate3d(5px, 0, 0); filter: brightness(1); }
+            50% { transform: scale(1.08) translate3d(10px, 0, 0); filter: brightness(1.6); }
+            100% { transform: scale(1.03) translate3d(5px, 0, 0); filter: brightness(1); }
+        }
+        .btn-mode.selected-active {
+            animation: select-pulse 0.4s ease-in-out;
+            z-index: 15;
+        }
+        .btn-mode.selected-active .icon-wrapper {
+            background-color: #ffffff;
+            border-color: #000000;
+        }
+        .btn-mode.selected-active .icon-wrapper img {
+            filter: brightness(0);
+        }
+        .btn-mode.selected-active .icon-wrapper svg {
+            fill: #000000;
+        }
+        .btn-mode.selected-active .slash-fold {
+            background-color: #e0e0e0;
+            border-color: #000000;
+        }
+        .btn-mode.selected-active .text-wrapper {
+            background-color: #ffffff;
+            border-color: #000000;
+            color: #000000;
+        }
+        .btn-mode.selected-active span {
+            text-shadow: none;
+        }
+        .right-content-partition {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 5%;
+            z-index: 10;
+        }
+        .music-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transform: rotate(2deg) skewX(-12deg);
+            gap: 15px;
+            width: 320px;
+        }
+        .music-art-frame {
+            width: 190px;
+            height: 190px;
+            background-color: #222222;
+            border: 4px solid #ffffff;
+            overflow: hidden;
+            box-shadow: -6px 6px 0px rgba(0,0,0,0.8);
+            transform: skewX(12deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .music-art-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .music-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: skewX(12deg);
+        }
+        .music-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: -3px 3px 0px rgba(0,0,0,0.8);
+            margin-top: 5px;
+        }
+        .game-layout {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .game-layout.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .top-navbar {
+            position: absolute;
+            top: 25px;
+            left: 5%;
+            right: 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 120;
+            width: 90%;
+        }
+        .left-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        .brand-logo {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: #ffffff;
+            text-shadow: -3px 3px 0px #000000;
+        }
+        .counters-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .perfect-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        .common-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #00f2fe;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        .okay-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #39ff14;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        .miss-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #ff2a74;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        @keyframes jump {
+            0% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+            50% { transform: translateY(0); }
+            70% { transform: translateY(-2px); }
+            100% { transform: translateY(0); }
+        }
+        .perfect-counter span, .common-counter span, .okay-counter span, .miss-counter span {
+            display: inline-block;
+            margin-left: 5px;
+        }
+        .perfect-counter.jump span, .common-counter.jump span, .okay-counter.jump span, .miss-counter.jump span {
+            animation: jump 0.3s ease-out;
+        }
+        .right-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            max-width: calc((100vw - 450px) / 2 - 5%);
+        }
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .score-container {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: -2px 2px 0px #000000;
+        }
+        .pause-wrapper {
+            width: 54px;
+            height: 54px;
+            background: #141414;
+            border: 3px solid #ffffff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: -3px 3px 0px rgba(0,0,0,0.5);
+            transition: transform 0.1s ease, background-color 0.1s ease, border-color 0.1s ease;
+        }
+        .pause-wrapper:hover {
+            transform: scale(1.05);
+            background: #ffffff;
+            border-color: #000000;
+        }
+        .pause-wrapper:hover .btn-pause {
+            fill: #000000;
+            filter: none;
+        }
+        .btn-pause {
+            width: 32px;
+            height: 32px;
+            fill: #ffffff;
+            filter: drop-shadow(-1px 1px 0px rgba(0,0,0,0.5));
+            transition: fill 0.1s ease;
+        }
+        .hearts-container {
+            display: none;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .hearts-container.visible {
+            display: flex;
+        }
+        .heart-icon {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            filter: drop-shadow(0px 0px 1px rgba(0,0,0,1)) drop-shadow(0px 0px 1px rgba(0,0,0,1));
+        }
+        .bar-container {
+            display: none;
+            width: 180px;
+            height: 24px;
+            background: #222222;
+            border: 3px solid #ffffff;
+            box-shadow: -3px 3px 0px rgba(0,0,0,0.5);
+            margin-top: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .bar-container.visible {
+            display: block;
+        }
+        .bar-fill {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff3366, #ffcc00, #39ff14);
+            transition: width 0.1s ease;
+        }
+        .tracks-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            border-left: 2px dashed rgba(255, 255, 255, 0.1);
+            border-right: 2px dashed rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            overflow: hidden;
+        }
+        .track-column {
+            position: relative;
+            width: 25%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .receptors-row {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 110;
+        }
+        .receptor-box {
+            width: 25%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .receptor {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.05s ease;
+        }
+        .arrow-icon {
+            width: 56px;
+            height: 56px;
+            background-color: rgba(255, 255, 255, 0.3);
+            -webkit-mask-image: url('../img/assets/arrow.png');
+            mask-image: url('../img/assets/arrow.png');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+        }
+        .dir-left { transform: rotate(180deg); }
+        .dir-up { transform: rotate(270deg); }
+        .dir-down { transform: rotate(90deg); }
+        .dir-right { transform: rotate(0deg); }
+        .col-0 .receptor.active .arrow-icon { background-color: #ff2a74; filter: drop-shadow(0 0 15px #ff2a74); }
+        .col-1 .receptor.active .arrow-icon { background-color: #00f2fe; filter: drop-shadow(0 0 15px #00f2fe); }
+        .col-2 .receptor.active .arrow-icon { background-color: #39ff14; filter: drop-shadow(0 0 15px #39ff14); }
+        .col-3 .receptor.active .arrow-icon { background-color: #ffb800; filter: drop-shadow(0 0 15px #ffb800); }
+        .receptor.active {
+            transform: scale(1.15);
+        }
+        .note {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate3d(-50%, 0, 0);
+            width: 64px;
+            height: 64px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 105;
+            will-change: transform;
+        }
+        .note .arrow-icon {
+            width: 56px;
+            height: 56px;
+        }
+        .n-left .arrow-icon { background-color: #ff2a74; filter: drop-shadow(0 0 10px #ff2a74); }
+        .n-up .arrow-icon { background-color: #00f2fe; filter: drop-shadow(0 0 10px #00f2fe); }
+        .n-down .arrow-icon { background-color: #39ff14; filter: drop-shadow(0 0 10px #39ff14); }
+        .n-right .arrow-icon { background-color: #ffb800; filter: drop-shadow(0 0 10px #ffb800); }
+        .feedback-overlay {
+            position: absolute;
+            top: 55%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            z-index: 120;
+        }
+        .rating {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-shadow: -2px 2px 0px #000000, 0 0 15px rgba(255, 230, 0, 0.5);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: transform 0.08s ease, opacity 0.08s;
+        }
+        .rating.pop {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        .pause-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            z-index: 200;
+            background: url('../img/fn/f1.jpg') no-repeat center center/cover;
+        }
+        .pause-screen.active {
+            display: flex;
+        }
+        .pause-left-partition {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 20, 0.95) 75%, transparent 75.1%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 8%;
+            position: relative;
+        }
+        .pause-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: -4px 4px 0px #000000;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .pause-menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .pause-right-partition {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 5%;
+        }
+        .stats-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background: rgba(20, 20, 20, 0.85);
+            border: 4px solid #ffffff;
+            border-radius: 20px;
+            padding: 35px;
+            width: 380px;
+            box-shadow: -8px 8px 0px rgba(0,0,0,0.6);
+            transform: rotate(2deg) skewX(-6deg);
+            gap: 20px;
+        }
+        .stats-panel * {
+            transform: skewX(6deg);
+        }
+        .stats-heading {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-transform: uppercase;
+            text-shadow: -2px 2px 0px #000000;
+            border-bottom: 3px dashed rgba(255, 255, 255, 0.2);
+            width: 100%;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: -2px 2px 0px #000000;
+            text-transform: uppercase;
+        }
+        .stat-val {
+            color: #00a2ff;
+        }
+        .stat-val.gold {
+            color: #ffe600;
+        }
+        .btn-mode .icon-wrapper svg.smooth-icon {
+            border-radius: 8px;
+        }
+        .end-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            z-index: 300;
+            background: url('../img/fn/f1.jpg') no-repeat center center/cover;
+        }
+        .end-screen.active {
+            display: flex;
+        }
+        .end-left-partition {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 20, 0.95) 75%, transparent 75.1%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 8%;
+            position: relative;
+        }
+        .end-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: -4px 4px 0px #000000;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .end-title.win {
+            color: #39ff14;
+            text-shadow: -4px 4px 0px #000000, 0 0 15px rgba(57, 255, 20, 0.3);
+        }
+        .end-title.lose {
+            color: #ff2a74;
+            text-shadow: -4px 4px 0px #000000, 0 0 15px rgba(255, 42, 116, 0.3);
+        }
+        .end-menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .end-right-partition {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 5%;
+        }
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(20, 20, 20, 0.85);
+            border: 4px solid #ffffff;
+            border-radius: 20px;
+            padding: 35px;
+            width: 420px;
+            box-shadow: -8px 8px 0px rgba(0,0,0,0.6);
+            transform: rotate(-2deg) skewX(-6deg);
+            gap: 15px;
+            position: relative;
+        }
+        .results-panel * {
+            transform: skewX(6deg);
+        }
+        .results-heading {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-transform: uppercase;
+            text-shadow: -2px 2px 0px #000000;
+            border-bottom: 3px dashed rgba(255, 255, 255, 0.2);
+            width: 100%;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .results-rank {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-shadow: -4px 4px 0px #000000, 0 0 25px rgba(255, 230, 0, 0.5);
+            margin: -5px 0 10px 0;
+            text-align: center;
+            width: 100%;
+        }
+        .results-stars {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .star-item {
+            width: 48px;
+            height: 48px;
+            background-color: rgba(255, 255, 255, 0.15);
+            -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z'/></svg>");
+            mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z'/></svg>");
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            transition: background-color 0.3s ease;
+        }
+        .star-item.active {
+            background-color: #ffe600;
+            filter: drop-shadow(0 0 8px #ffe600);
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <video id="bgVideo" class="bg-video" loop muted></video>
+    <audio id="bgMusic"></audio>
+    <div class="lobby-screen" id="lobbyViewport">
+        <div class="left-slash-partition">
+            <div class="logo-container">
+                <img src="../img/logo.png" alt="Logo OKAOs">
+            </div>
+            <div class="menu-container">
+                <div class="btn-mode" id="btnNormal">
+                    <div class="icon-wrapper">
+                        <img src="../img/icons/ic5.png" alt="Normal">
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Normal</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnRecovery">
+                    <div class="icon-wrapper">
+                        <img src="../img/icons/ic6.png" alt="Recuperación">
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Recuperación</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnNoLives">
+                    <div class="icon-wrapper">
+                        <img src="../img/icons/ic7.png" alt="Sin Vidas">
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Sin Vidas</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnExit">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M14.08,15.59L16.67,13H7V11H16.67L14.08,8.41L15.5,7L20.5,12L15.5,17L14.08,15.59M19,3A2,2 0 0,1 21,5V9.67L19,7.67V5H5V19H19V16.33L21,14.33V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Salir</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="right-content-partition">
+            <div class="music-panel">
+                <div class="music-art-frame">
+                    <img id="songArt" src="../img/logo.jpg" alt="Song Art" onerror="this.src='../img/logo.jpg'">
+                </div>
+                <div class="music-info">
+                    <span class="music-title" id="songTitle">Unknown Track</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="game-layout" id="gameViewport">
+        <div class="top-navbar">
+            <div class="left-stats">
+                <div class="brand-logo">OKAOs</div>
+                <div class="counters-grid">
+                    <div class="perfect-counter" id="perfectCounter">Perfects: <span id="perfectValue">x0</span></div>
+                    <div class="common-counter" id="commonCounter">Comunes: <span id="commonValue">x0</span></div>
+                    <div class="okay-counter" id="okayCounter">Okays: <span id="okayValue">x0</span></div>
+                    <div class="miss-counter" id="missCounter">Misses: <span id="missValue">x0</span></div>
+                </div>
+            </div>
+            <div class="right-stats">
+                <div class="score-row">
+                    <div class="score-container" id="score">000000</div>
+                    <div class="pause-wrapper" id="pauseTrigger">
+                        <svg class="btn-pause" viewBox="0 0 24 24">
+                            <path d="M14,19H18V5H14M6,19H10V5H6V19Z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="hearts-container" id="heartsContainer">
+                    <img src="../img/icons/ic8.png" alt="Heart" class="heart-icon">
+                    <img src="../img/icons/ic8.png" alt="Heart" class="heart-icon">
+                    <img src="../img/icons/ic8.png" alt="Heart" class="heart-icon">
+                </div>
+                <div class="bar-container" id="barContainer">
+                    <div class="bar-fill" id="barFill"></div>
+                </div>
+            </div>
+        </div>
+        <div class="tracks-container">
+            <div class="receptors-row">
+                <div class="receptor-box col-0">
+                    <div class="receptor" id="receptor-0">
+                        <div class="arrow-icon dir-left"></div>
+                    </div>
+                </div>
+                <div class="receptor-box col-1">
+                    <div class="receptor" id="receptor-1">
+                        <div class="arrow-icon dir-up"></div>
+                    </div>
+                </div>
+                <div class="receptor-box col-2">
+                    <div class="receptor" id="receptor-2">
+                        <div class="arrow-icon dir-down"></div>
+                    </div>
+                </div>
+                <div class="receptor-box col-3">
+                    <div class="receptor" id="receptor-3">
+                        <div class="arrow-icon dir-right"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="track-column" id="track-0"></div>
+            <div class="track-column" id="track-1"></div>
+            <div class="track-column" id="track-2"></div>
+            <div class="track-column" id="track-3"></div>
+        </div>
+        <div class="feedback-overlay">
+            <div id="rating" class="rating">PERFECT</div>
+        </div>
+    </div>
+    <div class="pause-screen" id="pauseViewport">
+        <div class="pause-left-partition">
+            <div class="pause-title">Pausa</div>
+            <div class="pause-menu-container">
+                <div class="btn-mode" id="btnResume">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Reanudar</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnRestart">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Reiniciar</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnSettings">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.47,5.34 14.86,5.1L14.47,2.42C14.43,2.19 14.24,2 14,2H10C9.76,2 9.57,2.19 9.53,2.42L9.14,5.1C8.53,5.34 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.95C7.96,18.34 8.53,18.66 9.14,18.9L9.53,21.58C9.57,21.81 9.76,22 10,22H14C14.24,22 14.43,21.81 14.47,21.58L14.86,18.9C15.47,18.66 16.04,18.34 16.56,17.95L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Ajustes</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnPauseExit">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M14.08,15.59L16.67,13H7V11H16.67L14.08,8.41L15.5,7L20.5,12L15.5,17L14.08,15.59M19,3A2,2 0 0,1 21,5V9.67L19,7.67V5H5V19H19V16.33L21,14.33V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Salir</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pause-right-partition">
+            <div class="stats-panel">
+                <div class="stats-heading">Estadísticas</div>
+                <div class="stat-row">
+                    <span>Puntaje</span>
+                    <span class="stat-val gold" id="pauseScore">000000</span>
+                </div>
+                <div class="stat-row">
+                    <span>Perfects</span>
+                    <span class="stat-val" id="pausePerfects">x0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Combo Máx</span>
+                    <span class="stat-val" id="pauseCombo">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="end-screen" id="endViewport">
+        <div class="end-left-partition">
+            <div class="end-title" id="endTitle">Fin de Partida</div>
+            <div class="end-menu-container">
+                <div class="btn-mode" id="btnEndRetry">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Reintentar</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnEndSongs">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M12,3V12.26C11.5,12.09 11,12 10.5,12C8,12 6,14 6,16.5C6,19 8,21 10.5,21C13,21 15,19 15,16.5V6H19V3H12Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Canciones</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnEndExit">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M14.08,15.59L16.67,13H7V11H16.67L14.08,8.41L15.5,7L20.5,12L15.5,17L14.08,15.59M19,3A2,2 0 0,1 21,5V9.67L19,7.67V5H5V19H19V16.33L21,14.33V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Inicio</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="end-right-partition">
+            <div class="results-panel">
+                <div class="results-heading" id="resultsStatus">Completado</div>
+                <div class="results-rank" id="resultsRank">SS</div>
+                <div class="results-stars">
+                    <div class="star-item" id="star-1"></div>
+                    <div class="star-item" id="star-2"></div>
+                    <div class="star-item" id="star-3"></div>
+                </div>
+                <div class="stat-row">
+                    <span>Puntaje</span>
+                    <span class="stat-val gold" id="endScore">000000</span>
+                </div>
+                <div class="stat-row">
+                    <span>Perfects</span>
+                    <span class="stat-val" id="endPerfects">x0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Combo Máx</span>
+                    <span class="stat-val" id="endCombo">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const CONFIG = {
+            targetY: 25,
+            basePreSpawnTime: 2000
+        };
+        const state = {
+            isPlaying: false,
+            isPaused: false,
+            mode: 'normal',
+            lives: 3,
+            maxLives: 3,
+            recoveryHealth: 50,
+            score: 0,
+            perfects: 0,
+            commons: 0,
+            okays: 0,
+            misses: 0,
+            maxCombo: 0,
+            currentCombo: 0,
+            notes: [],
+            beatmap: [],
+            nextNoteIndex: 0,
+            loopId: null,
+            speedFactor: 1,
+            userKeys: ['D', 'F', 'J', 'K']
+        };
+        const audio = document.getElementById('bgMusic');
+        const bgVideo = document.getElementById('bgVideo');
+        const lobbyViewport = document.getElementById('lobbyViewport');
+        const gameViewport = document.getElementById('gameViewport');
+        const pauseViewport = document.getElementById('pauseViewport');
+        const endViewport = document.getElementById('endViewport');
+        const btnNormal = document.getElementById('btnNormal');
+        const btnRecovery = document.getElementById('btnRecovery');
+        const btnNoLives = document.getElementById('btnNoLives');
+        const btnExit = document.getElementById('btnExit');
+        const btnResume = document.getElementById('btnResume');
+        const btnRestart = document.getElementById('btnRestart');
+        const btnSettings = document.getElementById('btnSettings');
+        const btnPauseExit = document.getElementById('btnPauseExit');
+        const btnEndRetry = document.getElementById('btnEndRetry');
+        const btnEndSongs = document.getElementById('btnEndSongs');
+        const btnEndExit = document.getElementById('btnEndExit');
+        const pauseTrigger = document.getElementById('pauseTrigger');
+        const scoreEl = document.getElementById('score');
+        const ratingEl = document.getElementById('rating');
+        
+        const perfectCounterEl = document.getElementById('perfectCounter');
+        const perfectValueEl = document.getElementById('perfectValue');
+        const commonCounterEl = document.getElementById('commonCounter');
+        const commonValueEl = document.getElementById('commonValue');
+        const okayCounterEl = document.getElementById('okayCounter');
+        const okayValueEl = document.getElementById('okayValue');
+        const missCounterEl = document.getElementById('missCounter');
+        const missValueEl = document.getElementById('missValue');
+
+        const heartsContainer = document.getElementById('heartsContainer');
+        const barContainer = document.getElementById('barContainer');
+        const barFill = document.getElementById('barFill');
+        const pauseScore = document.getElementById('pauseScore');
+        const pausePerfects = document.getElementById('pausePerfects');
+        const pauseCombo = document.getElementById('pauseCombo');
+        const endTitle = document.getElementById('endTitle');
+        const resultsStatus = document.getElementById('resultsStatus');
+        const resultsRank = document.getElementById('resultsRank');
+        const endScore = document.getElementById('endScore');
+        const endPerfects = document.getElementById('endPerfects');
+        const endCombo = document.getElementById('endCombo');
+        const star1 = document.getElementById('star-1');
+        const star2 = document.getElementById('star-2');
+        const star3 = document.getElementById('star-3');
+        const tracks = [
+            document.getElementById('track-0'),
+            document.getElementById('track-1'),
+            document.getElementById('track-2'),
+            document.getElementById('track-3')
+        ];
+        const receptors = [
+            document.getElementById('receptor-0'),
+            document.getElementById('receptor-1'),
+            document.getElementById('receptor-2'),
+            document.getElementById('receptor-3')
+        ];
+        const colClasses = ['n-left', 'n-up', 'n-down', 'n-right'];
+        const dirClasses = ['dir-left', 'dir-up', 'dir-down', 'dir-right'];
+
+        function loadPreferences() {
+            const saved = localStorage.getItem('okaos_settings');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    if (config.keys) {
+                        state.userKeys[0] = (config.keys.key1 || 'D').toUpperCase();
+                        state.userKeys[1] = (config.keys.key2 || 'F').toUpperCase();
+                        state.userKeys[2] = (config.keys.key3 || 'J').toUpperCase();
+                        state.userKeys[3] = (config.keys.key4 || 'K').toUpperCase();
+                    }
+                    if (config.speed) {
+                        let parsedSpeed = parseFloat(config.speed);
+                        if (!isNaN(parsedSpeed) && parsedSpeed > 0) {
+                            state.speedFactor = parsedSpeed;
+                        }
+                    }
+                } catch(e) {
+                    console.error(e);
+                }
+            }
+        }
+
+        function mapColumn(colValue) {
+            if (colValue === undefined || colValue === null) return 0;
+            if (typeof colValue === 'number') {
+                return Math.min(Math.max(Math.floor(colValue), 0), 3);
+            }
+            const val = String(colValue).trim().toLowerCase();
+            if (val === '0' || val === 'l' || val === 'left' || val === 'izquierda') return 0;
+            if (val === '1' || val === 'u' || val === 'up' || val === 'arriba') return 1;
+            if (val === '2' || val === 'd' || val === 'down' || val === 'abajo') return 2;
+            if (val === '3' || val === 'r' || val === 'right' || val === 'derecha') return 3;
+            return 0;
+        }
+
+        async function fetchBeatmap() {
+            try {
+                const savedSong = localStorage.getItem('selectedSong');
+                let songData = { id: "m1", nombre: "Unknown Track", autor: "Unknown" };
+                if (savedSong) {
+                    songData = JSON.parse(savedSong);
+                }
+                
+                document.getElementById('songTitle').textContent = songData.nombre || "Unknown Track";
+                
+                const coverUrl = songData.portada || songData.fondo || `../img/logo.jpg`;
+                document.getElementById('songArt').src = coverUrl;
+
+                if (songData.video) {
+                    bgVideo.src = songData.video;
+                    bgVideo.style.display = 'none';
+                    bgVideo.load();
+                } else if (songData.fondo) {
+                    bgVideo.style.display = 'none';
+                    bgVideo.src = "";
+                } else {
+                    bgVideo.style.display = 'none';
+                    bgVideo.src = "";
+                }
+
+                audio.src = songData.audio || `../music/${songData.id}.ogg`;
+                audio.load();
+                
+                let data = null;
+                if (songData.notes) {
+                    data = songData.notes;
+                } else if (songData.beatmap) {
+                    data = songData.beatmap;
+                } else {
+                    const mapPath = songData.map || `../mapped/${songData.id}.json`;
+                    const response = await fetch(mapPath);
+                    data = await response.json();
+                }
+
+                const savedSettings = localStorage.getItem('okaos_settings');
+                let hasGlobalSpeed = false;
+                if (savedSettings) {
+                    try {
+                        const parsedGlobal = JSON.parse(savedSettings);
+                        if (parsedGlobal.speed && !isNaN(parseFloat(parsedGlobal.speed))) {
+                            state.speedFactor = parseFloat(parsedGlobal.speed);
+                            hasGlobalSpeed = true;
+                        }
+                    } catch(err){}
+                }
+
+                if (data && !hasGlobalSpeed) {
+                    let rawSpeed = data.velocidad !== undefined ? data.velocidad : data.speed;
+                    if (rawSpeed !== undefined) {
+                        let parsedSpeed = parseFloat(rawSpeed);
+                        if (!isNaN(parsedSpeed) && parsedSpeed > 0) {
+                            state.speedFactor = parsedSpeed;
+                        }
+                    }
+                }
+                
+                let rawNotes = [];
+                if (Array.isArray(data)) {
+                    rawNotes = data;
+                } else if (data.notes && Array.isArray(data.notes)) {
+                    rawNotes = data.notes;
+                } else if (data.beatmap && Array.isArray(data.beatmap)) {
+                    rawNotes = data.beatmap;
+                } else if (data.chart && Array.isArray(data.chart)) {
+                    rawNotes = data.chart;
+                } else {
+                    for (const key in data) {
+                        if (Array.isArray(data[key])) {
+                            rawNotes = data[key];
+                            break;
+                        }
+                    }
+                }
+
+                state.beatmap = rawNotes.map(item => {
+                    const col = mapColumn(item.col !== undefined ? item.col : item.column);
+                    let timeVal = 0;
+                    if (item.time !== undefined) timeVal = Number(item.time);
+                    else if (item.t !== undefined) timeVal = Number(item.t);
+                    else if (item.timestamp !== undefined) timeVal = Number(item.timestamp);
+
+                    const hasDecimalSeconds = !Number.isInteger(timeVal) || (timeVal > 0 && timeVal < 60 && !rawNotes.some(n => (n.time || n.t) > 5000));
+                    if (hasDecimalSeconds) {
+                        timeVal = Math.round(timeVal * 1000);
+                    }
+
+                    return { col, time: timeVal };
+                });
+
+                state.beatmap.sort((a, b) => a.time - b.time);
+
+            } catch (e) {
+                console.error("Map load failed", e);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadPreferences();
+            fetchBeatmap();
+        });
+
+        [btnNormal, btnRecovery, btnNoLives].forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.add('selected-active');
+                setTimeout(() => {
+                    btn.classList.remove('selected-active');
+                    lobbyViewport.style.display = 'none';
+                    gameViewport.classList.add('active');
+                    
+                    const savedSong = localStorage.getItem('selectedSong');
+                    if (savedSong) {
+                        const songData = JSON.parse(savedSong);
+                        if (songData.video) {
+                            bgVideo.style.display = 'block';
+                        } else if (songData.fondo) {
+                            document.body.style.backgroundImage = `url('${songData.fondo}')`;
+                        } else {
+                            document.body.style.backgroundImage = "url('../img/fn/f1.jpg')";
+                        }
+                    }
+
+                    if (btn === btnNormal) {
+                        state.mode = 'normal';
+                        state.lives = 3;
+                        state.maxLives = 3;
+                        updateHeartsUI();
+                        heartsContainer.classList.add('visible');
+                        barContainer.classList.remove('visible');
+                    } else if (btn === btnRecovery) {
+                        state.mode = 'recovery';
+                        state.recoveryHealth = 50;
+                        updateBarUI();
+                        heartsContainer.classList.remove('visible');
+                        barContainer.classList.add('visible');
+                    } else {
+                        state.mode = 'nolives';
+                        heartsContainer.classList.remove('visible');
+                        barContainer.classList.remove('visible');
+                    }
+                    startGame();
+                }, 400);
+            });
+        });
+
+        btnExit.addEventListener('click', () => {
+            btnExit.classList.add('selected-active');
+            setTimeout(() => {
+                btnExit.classList.remove('selected-active');
+                window.location.href = "/";
+            }, 400);
+        });
+
+        btnSettings.addEventListener('click', () => {
+            btnSettings.classList.add('selected-active');
+            setTimeout(() => {
+                btnSettings.classList.remove('selected-active');
+                window.location.href = "../sc/settings.html";
+            }, 400);
+        });
+
+        btnPauseExit.addEventListener('click', () => {
+            btnPauseExit.classList.add('selected-active');
+            setTimeout(() => {
+                btnPauseExit.classList.remove('selected-active');
+                window.location.href = "/";
+            }, 400);
+        });
+
+        btnEndRetry.addEventListener('click', () => {
+            btnEndRetry.classList.add('selected-active');
+            setTimeout(() => {
+                btnEndRetry.classList.remove('selected-active');
+                endViewport.classList.remove('active');
+                startGame();
+            }, 400);
+        });
+
+        btnEndSongs.addEventListener('click', () => {
+            btnEndSongs.classList.add('selected-active');
+            setTimeout(() => {
+                btnEndSongs.classList.remove('selected-active');
+                window.location.href = "../sc/settings.html";
+            }, 400);
+        });
+
+        btnEndExit.addEventListener('click', () => {
+            btnEndExit.classList.add('selected-active');
+            setTimeout(() => {
+                btnEndExit.classList.remove('selected-active');
+                window.location.href = "/";
+            }, 400);
+        });
+
+        pauseTrigger.addEventListener('click', () => {
+            togglePause();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                if (gameViewport.classList.contains('active') && !endViewport.classList.contains('active')) {
+                    togglePause();
+                }
+            }
+        });
+
+        btnResume.addEventListener('click', () => {
+            btnResume.classList.add('selected-active');
+            setTimeout(() => {
+                btnResume.classList.remove('selected-active');
+                togglePause();
+            }, 400);
+        });
+
+        btnRestart.addEventListener('click', () => {
+            btnRestart.classList.add('selected-active');
+            setTimeout(() => {
+                btnRestart.classList.remove('selected-active');
+                pauseViewport.classList.remove('active');
+                state.isPaused = false;
+                startGame();
+            }, 400);
+        });
+
+        function togglePause() {
+            if (!state.isPlaying && !state.isPaused) return;
+            if (!state.isPaused) {
+                state.isPaused = true;
+                state.isPlaying = false;
+                cancelAnimationFrame(state.loopId);
+                audio.pause();
+                if (bgVideo.src && bgVideo.style.display !== 'none') {
+                    bgVideo.pause();
+                }
+                pauseScore.textContent = String(state.score).padStart(6, '0');
+                pausePerfects.textContent = `x${state.perfects}`;
+                pauseCombo.textContent = state.maxCombo;
+                pauseViewport.classList.add('active');
+            } else {
+                pauseViewport.classList.remove('active');
+                state.isPaused = false;
+                state.isPlaying = true;
+                audio.play();
+                if (bgVideo.src && bgVideo.style.display !== 'none') {
+                    bgVideo.play().catch(()=>{});
+                }
+                state.loopId = requestAnimationFrame(loop);
+            }
+        }
+
+        function updateHeartsUI() {
+            const icons = heartsContainer.querySelectorAll('.heart-icon');
+            icons.forEach((icon, i) => {
+                if (i < state.lives) {
+                    icon.style.opacity = '1';
+                } else {
+                    icon.style.opacity = '0.2';
+                }
+            });
+        }
+
+        function updateBarUI() {
+            barFill.style.width = `${state.recoveryHealth}%`;
+        }
+
+        function startGame() {
+            loadPreferences();
+            state.isPlaying = true;
+            state.isPaused = false;
+            state.score = 0;
+            state.perfects = 0;
+            state.commons = 0;
+            state.okays = 0;
+            state.misses = 0;
+            state.currentCombo = 0;
+            state.maxCombo = 0;
+            state.nextNoteIndex = 0;
+            
+            if (state.mode === 'normal') {
+                state.lives = 3;
+                updateHeartsUI();
+            } else if (state.mode === 'recovery') {
+                state.recoveryHealth = 50;
+                updateBarUI();
+            }
+
+            scoreEl.textContent = '000000';
+            perfectValueEl.textContent = 'x0';
+            commonValueEl.textContent = 'x0';
+            okayValueEl.textContent = 'x0';
+            missValueEl.textContent = 'x0';
+            ratingEl.className = 'rating';
+            state.notes.forEach(note => note.element.remove());
+            state.notes = [];
+            audio.currentTime = 0;
+            
+            const savedSong = localStorage.getItem('selectedSong');
+            if (savedSong) {
+                const songData = JSON.parse(savedSong);
+                if (songData.video) {
+                    bgVideo.style.display = 'block';
+                    bgVideo.currentTime = 0;
+                    bgVideo.play().catch(()=>{});
+                } else {
+                    bgVideo.style.display = 'none';
+                    bgVideo.src = "";
+                }
+            }
+            
+            audio.play();
+            setupInput();
+            state.loopId = requestAnimationFrame(loop);
+        }
+
+        function spawnNote(col, targetTime) {
+            const noteEl = document.createElement('div');
+            noteEl.className = `note ${colClasses[col]}`;
+            const icon = document.createElement('div');
+            icon.className = `arrow-icon ${dirClasses[col]}`;
+            noteEl.appendChild(icon);
+            tracks[col].appendChild(noteEl);
+            const startY = window.innerHeight;
+            noteEl.style.transform = `translate3d(-50%, ${startY}px, 0)`;
+            state.notes.push({
+                element: noteEl,
+                col: col,
+                y: startY,
+                targetTime: targetTime
+            });
+        }
+
+        function triggerHit(col, rating) {
+            receptors[col].classList.add('active');
+            setTimeout(() => receptors[col].classList.remove('active'), 80);
+            
+            let points = 0;
+            if (rating === 'PERFECT') {
+                points = 100;
+                state.perfects += 1;
+                perfectValueEl.textContent = `x${state.perfects}`;
+                perfectCounterEl.classList.remove('jump');
+                void perfectCounterEl.offsetWidth;
+                perfectCounterEl.classList.add('jump');
+                if (state.mode === 'recovery') {
+                    state.recoveryHealth = Math.min(100, state.recoveryHealth + 10);
+                    updateBarUI();
+                }
+            } else if (rating === 'COMUN') {
+                points = 50;
+                state.commons += 1;
+                commonValueEl.textContent = `x${state.commons}`;
+                commonCounterEl.classList.remove('jump');
+                void commonCounterEl.offsetWidth;
+                commonCounterEl.classList.add('jump');
+                if (state.mode === 'recovery') {
+                    state.recoveryHealth = Math.min(100, state.recoveryHealth + 5);
+                    updateBarUI();
+                }
+            } else if (rating === 'OKAY') {
+                points = 20;
+                state.okays += 1;
+                okayValueEl.textContent = `x${state.okays}`;
+                okayCounterEl.classList.remove('jump');
+                void okayCounterEl.offsetWidth;
+                okayCounterEl.classList.add('jump');
+                if (state.mode === 'recovery') {
+                    state.recoveryHealth = Math.min(100, state.recoveryHealth + 3);
+                    updateBarUI();
+                }
+            }
+
+            state.score += points;
+            scoreEl.textContent = String(state.score).padStart(6, '0');
+            state.currentCombo += 1;
+            if (state.currentCombo > state.maxCombo) {
+                state.maxCombo = state.currentCombo;
+            }
+            
+            ratingEl.textContent = rating;
+            ratingEl.className = 'rating pop';
+            if (rating === 'PERFECT') ratingEl.style.color = '#ffe600';
+            else if (rating === 'COMUN') ratingEl.style.color = '#00f2fe';
+            else if (rating === 'OKAY') ratingEl.style.color = '#39ff14';
+
+            setTimeout(() => ratingEl.classList.remove('pop'), 100);
+        }
+
+        function triggerMiss() {
+            state.currentCombo = 0;
+            state.misses += 1;
+            missValueEl.textContent = `x${state.misses}`;
+            missCounterEl.classList.remove('jump');
+            void missCounterEl.offsetWidth;
+            missCounterEl.classList.add('jump');
+            
+            ratingEl.textContent = 'MISS';
+            ratingEl.style.color = '#ff2a74';
+            ratingEl.className = 'rating pop';
+            setTimeout(() => ratingEl.classList.remove('pop'), 100);
+
+            if (state.mode === 'normal') {
+                state.lives--;
+                updateHeartsUI();
+                if (state.lives <= 0) {
+                    endGame(false);
+                }
+            } else if (state.mode === 'recovery') {
+                state.recoveryHealth = Math.max(0, state.recoveryHealth - 10);
+                updateBarUI();
+                if (state.recoveryHealth <= 0) {
+                    endGame(false);
+                }
+            }
+        }
+
+        function endGame(isWin) {
+            state.isPlaying = false;
+            cancelAnimationFrame(state.loopId);
+            audio.pause();
+            if (bgVideo.src) {
+                bgVideo.pause();
+            }
+            window.onkeydown = null;
+
+            let rank = 'F';
+            let stars = 0;
+            
+            if (isWin) {
+                const totalNotes = state.beatmap.length;
+                const accuracy = totalNotes > 0 ? (state.perfects / totalNotes) * 100 : 0;
+                
+                if (accuracy === 100) {
+                    rank = 'SS';
+                } else if (accuracy >= 95) {
+                    rank = 'S';
+                } else if (accuracy >= 85) {
+                    rank = 'A';
+                } else if (accuracy >= 70) {
+                    rank = 'B';
+                } else if (accuracy >= 50) {
+                    rank = 'C';
+                } else {
+                    rank = 'D';
+                }
+
+                stars = 1;
+                
+                if (state.mode === 'normal') {
+                    if (state.lives === state.maxLives && state.misses === 0) {
+                        stars = 2;
+                    }
+                } else {
+                    if (state.misses === 0) {
+                        stars = 2;
+                    }
+                }
+
+                if (accuracy === 100) {
+                    stars = 3;
+                }
+            } else {
+                rank = 'F';
+                stars = 0;
+            }
+
+            endTitle.textContent = isWin ? '¡Victoria!' : 'Fin de Partida';
+            endTitle.className = isWin ? 'end-title win' : 'end-title lose';
+            resultsStatus.textContent = isWin ? 'Completado' : 'Fallado';
+            resultsRank.textContent = rank;
+            
+            endScore.textContent = String(state.score).padStart(6, '0');
+            endPerfects.textContent = `x${state.perfects}`;
+            endCombo.textContent = state.maxCombo;
+
+            star1.classList.toggle('active', stars >= 1);
+            star2.classList.toggle('active', stars >= 2);
+            star3.classList.toggle('active', stars >= 3);
+
+            endViewport.classList.add('active');
+        }
+
+        function setupInput() {
+            window.onkeydown = (e) => {
+                if (!state.isPlaying || state.isPaused) {
+                    if (e.key === 'Escape' || e.key === 'Esc') {
+                        togglePause();
+                    }
+                    return;
+                }
+
+                if (e.key === 'Escape' || e.key === 'Esc') {
+                    togglePause();
+                    return;
+                }
+
+                let keyStr = e.key.toUpperCase();
+                if (keyStr === ' ') keyStr = 'SPACE';
+                if (keyStr === 'ARROWLEFT') keyStr = '←';
+                if (keyStr === 'ARROWRIGHT') keyStr = '→';
+                if (keyStr === 'ARROWUP') keyStr = '↑';
+                if (keyStr === 'ARROWDOWN') keyStr = '↓';
+
+                const keyIndex = state.userKeys.indexOf(keyStr);
+                if (keyIndex !== -1) {
+                    receptors[keyIndex].classList.add('active');
+                    setTimeout(() => receptors[keyIndex].classList.remove('active'), 80);
+
+                    const currentTime = audio.currentTime * 1000;
+                    let hitNotes = state.notes.filter(n => n.col === keyIndex);
+                    
+                    if (hitNotes.length > 0) {
+                        let targetNote = hitNotes[0];
+                        let diff = targetNote.targetTime - currentTime;
+
+                        if (diff <= 45 && diff >= -45) {
+                            triggerHit(targetNote.col, 'PERFECT');
+                            targetNote.element.remove();
+                            state.notes = state.notes.filter(n => n !== targetNote);
+                        } else if (diff > 45 && diff <= 90) {
+                            triggerHit(targetNote.col, 'COMUN');
+                            targetNote.element.remove();
+                            state.notes = state.notes.filter(n => n !== targetNote);
+                        } else if (diff > 90 && diff <= 150) {
+                            triggerHit(targetNote.col, 'OKAY');
+                            targetNote.element.remove();
+                            state.notes = state.notes.filter(n => n !== targetNote);
+                        }
+                    }
+                }
+            };
+        }
+
+        function loop() {
+            if (!state.isPlaying) return;
+            const currentTime = audio.currentTime * 1000;
+            const currentPreSpawnTime = CONFIG.basePreSpawnTime / state.speedFactor;
+            
+            while (state.nextNoteIndex < state.beatmap.length && 
+                   state.beatmap[state.nextNoteIndex].time - currentPreSpawnTime <= currentTime) {
+                const rawNote = state.beatmap[state.nextNoteIndex];
+                spawnNote(rawNote.col, rawNote.time);
+                state.nextNoteIndex++;
+            }
+            
+            const spawnStartY = window.innerHeight;
+            const totalTravelDistance = spawnStartY - CONFIG.targetY;
+            
+            for (let i = state.notes.length - 1; i >= 0; i--) {
+                const note = state.notes[i];
+                const timeLeft = note.targetTime - currentTime;
+                
+                if (timeLeft > 0) {
+                    const ratio = timeLeft / currentPreSpawnTime;
+                    note.y = CONFIG.targetY + (ratio * totalTravelDistance);
+                } else {
+                    note.y = CONFIG.targetY - Math.abs((timeLeft / currentPreSpawnTime) * totalTravelDistance);
+                }
+                
+                note.element.style.transform = `translate3d(-50%, ${note.y}px, 0)`;
+                
+                if (note.y < -64) {
+                    triggerMiss();
+                    note.element.remove();
+                    state.notes.splice(i, 1);
+                    continue;
+                }
+            }
+            
+            if (audio.ended) {
+                endGame(true);
+                return;
+            }
+            state.loopId = requestAnimationFrame(loop);
+        }
+    </script>
+</body>
+</html>
