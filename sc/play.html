@@ -497,7 +497,7 @@
                         setTimeout(() => { loadingOverlay.style.clipPath = 'none'; loadingContent.classList.add('show'); }, 600);
                         let dotCount = 0;
                         const interval = setInterval(() => { dotCount = (dotCount + 1) % 4; loadingText.textContent = "Cargando" + ".".repeat(dotCount); }, 400);
-                        setTimeout(() => { clearInterval(interval); window.location.href = "../play/run.html"; }, 3000);
+                        setTimeout(() => { clearInterval(interval); window.location.href = "../play/run"; }, 3000);
                         return;
                     }
                     document.querySelectorAll('.track-item').forEach(t => t.classList.remove('selected'));
