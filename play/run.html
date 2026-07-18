@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OKAOs - Play</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
-    <link class="mcpixel-logo-ref" rel="icon" type="image/jpg" href="../img/logo.jpg">
+    <link rel="icon" type="image/jpg" href="../img/logo.jpg">
     <style>
         * {
             margin: 0;
@@ -1299,7 +1299,7 @@
             btnExit.classList.add('selected-active');
             setTimeout(() => {
                 btnExit.classList.remove('selected-active');
-                window.location.href = "/";
+                window.location.href = "../";
             }, 400);
         });
 
@@ -1315,7 +1315,7 @@
             btnPauseExit.classList.add('selected-active');
             setTimeout(() => {
                 btnPauseExit.classList.remove('selected-active');
-                window.location.href = "/";
+                window.location.href = "../";
             }, 400);
         });
 
@@ -1340,7 +1340,7 @@
             btnEndExit.classList.add('selected-active');
             setTimeout(() => {
                 btnEndExit.classList.remove('selected-active');
-                window.location.href = "/";
+                window.location.href = "../";
             }, 400);
         });
 
@@ -1504,7 +1504,7 @@
             icon.className = `arrow-icon ${dirClasses[col]}`;
             noteEl.appendChild(icon);
             tracks[col].appendChild(noteEl);
-            noteEl.style.transform = `translate3d(-50%, ${window.innerHeight + 100}px, 0px)`;
+            noteEl.style.transform = `translate3d(-50%, -100px, 0px)`;
             state.notes.push({
                 element: noteEl,
                 col: col,
@@ -1725,20 +1725,16 @@
                 state.nextNoteIndex++;
             }
             
-            const screenHeight = window.innerHeight;
+            const receptorY = 25;
             const speedMultiplier = state.speedFactor * 0.4;
             
             for (let i = state.notes.length - 1; i >= 0; i--) {
                 const note = state.notes[i];
                 const timeDifference = note.targetTime - currentTime;
                 
-                let calculatedY = CONFIG.targetY + (timeDifference * speedMultiplier);
+                let calculatedY = receptorY + (timeDifference * speedMultiplier);
                 
-                if (calculatedY <= screenHeight) {
-                    note.element.style.transform = `translate3d(-50%, ${calculatedY}px, 0px)`;
-                } else {
-                    note.element.style.transform = `translate3d(-50%, ${screenHeight + 100}px, 0px)`;
-                }
+                note.element.style.transform = `translate3d(-50%, ${calculatedY}px, 0px)`;
                 
                 if (calculatedY < -64) {
                     triggerMiss();
