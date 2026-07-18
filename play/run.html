@@ -1504,11 +1504,13 @@
             icon.className = `arrow-icon ${dirClasses[col]}`;
             noteEl.appendChild(icon);
             tracks[col].appendChild(noteEl);
-            noteEl.style.transform = `translate3d(-50%, -100px, 0px)`;
+            const spawnStartY = window.innerHeight;
+            noteEl.style.transform = `translate3d(-50%, ${spawnStartY}px, 0px)`;
             state.notes.push({
                 element: noteEl,
                 col: col,
-                targetTime: targetTime
+                targetTime: targetTime,
+                spawnStartY: spawnStartY
             });
         }
 
@@ -1726,17 +1728,23 @@
             }
             
             const receptorY = 25;
-            const speedMultiplier = state.speedFactor * 0.4;
             
             for (let i = state.notes.length - 1; i >= 0; i--) {
                 const note = state.notes[i];
                 const timeDifference = note.targetTime - currentTime;
+                const totalTravelDistance = note.spawnStartY - receptorY;
                 
-                let calculatedY = receptorY + (timeDifference * speedMultiplier);
+                let calculatedY;
+                if (timeDifference > 0) {
+                    const ratio = timeDifference / currentPreSpawnTime;
+                    calculatedY = receptorY + (ratio * totalTravelDistance);
+                } else {
+                    calculatedY = receptorY;
+                }
                 
                 note.element.style.transform = `translate3d(-50%, ${calculatedY}px, 0px)`;
                 
-                if (calculatedY < -64) {
+                if (timeDifference < -150) {
                     triggerMiss();
                     note.element.remove();
                     state.notes.splice(i, 1);
