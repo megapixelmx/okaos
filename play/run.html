@@ -1025,8 +1025,7 @@
     <script>
         const CONFIG = {
             targetY: 25,
-            basePreSpawnTime: 2000,
-            spawnStartY: 800
+            basePreSpawnTime: 2000
         };
         const state = {
             isPlaying: false,
@@ -1088,7 +1087,7 @@
         const pausePerfects = document.getElementById('pausePerfects');
         const pauseCombo = document.getElementById('pauseCombo');
         const endTitle = document.getElementById('endTitle');
-        constresultsStatus = document.getElementById('resultsStatus');
+        const resultsStatus = document.getElementById('resultsStatus');
         const resultsRank = document.getElementById('resultsRank');
         const endScore = document.getElementById('endScore');
         const endPerfects = document.getElementById('endPerfects');
@@ -1505,11 +1504,10 @@
             icon.className = `arrow-icon ${dirClasses[col]}`;
             noteEl.appendChild(icon);
             tracks[col].appendChild(noteEl);
-            noteEl.style.transform = `translate3d(-50%, ${CONFIG.spawnStartY}px, 0px)`;
+            noteEl.style.transform = `translate3d(-50%, ${window.innerHeight + 100}px, 0px)`;
             state.notes.push({
                 element: noteEl,
                 col: col,
-                y: CONFIG.spawnStartY,
                 targetTime: targetTime
             });
         }
@@ -1727,22 +1725,22 @@
                 state.nextNoteIndex++;
             }
             
-            const totalTravelDistance = CONFIG.spawnStartY - CONFIG.targetY;
+            const screenHeight = window.innerHeight;
+            const speedMultiplier = state.speedFactor * 0.4;
             
             for (let i = state.notes.length - 1; i >= 0; i--) {
                 const note = state.notes[i];
-                const timeLeft = note.targetTime - currentTime;
+                const timeDifference = note.targetTime - currentTime;
                 
-                if (timeLeft > 0) {
-                    const ratio = timeLeft / currentPreSpawnTime;
-                    note.y = CONFIG.targetY + (ratio * totalTravelDistance);
+                let calculatedY = CONFIG.targetY + (timeDifference * speedMultiplier);
+                
+                if (calculatedY <= screenHeight) {
+                    note.element.style.transform = `translate3d(-50%, ${calculatedY}px, 0px)`;
                 } else {
-                    note.y = CONFIG.targetY - Math.abs((timeLeft / currentPreSpawnTime) * totalTravelDistance);
+                    note.element.style.transform = `translate3d(-50%, ${screenHeight + 100}px, 0px)`;
                 }
                 
-                note.element.style.transform = `translate3d(-50%, ${note.y}px, 0px)`;
-                
-                if (note.y < -64) {
+                if (calculatedY < -64) {
                     triggerMiss();
                     note.element.remove();
                     state.notes.splice(i, 1);
