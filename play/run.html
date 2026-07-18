@@ -738,6 +738,32 @@
             background-color: #ffe600;
             filter: drop-shadow(0 0 8px #ffe600);
         }
+        .countdown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 150;
+            background: rgba(0,0,0,0.4);
+        }
+        .countdown-text {
+            font-size: 6rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: -4px 4px 0px #000000, 0 0 30px rgba(255,255,255,0.6);
+            transform: scale(0.5);
+            opacity: 0;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+        }
+        .countdown-text.pop {
+            transform: scale(1.2);
+            opacity: 1;
+        }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -801,6 +827,9 @@
         </div>
     </div>
     <div class="game-layout" id="gameViewport">
+        <div class="countdown-overlay" id="countdownOverlay">
+            <div class="countdown-text" id="countdownText">3</div>
+        </div>
         <div class="top-navbar">
             <div class="left-stats">
                 <div class="brand-logo">OKAOs</div>
@@ -996,7 +1025,8 @@
     <script>
         const CONFIG = {
             targetY: 25,
-            basePreSpawnTime: 2000
+            basePreSpawnTime: 2000,
+            spawnStartY: 800
         };
         const state = {
             isPlaying: false,
@@ -1025,6 +1055,8 @@
         const gameViewport = document.getElementById('gameViewport');
         const pauseViewport = document.getElementById('pauseViewport');
         const endViewport = document.getElementById('endViewport');
+        const countdownOverlay = document.getElementById('countdownOverlay');
+        const countdownText = document.getElementById('countdownText');
         const btnNormal = document.getElementById('btnNormal');
         const btnRecovery = document.getElementById('btnRecovery');
         const btnNoLives = document.getElementById('btnNoLives');
@@ -1056,7 +1088,7 @@
         const pausePerfects = document.getElementById('pausePerfects');
         const pauseCombo = document.getElementById('pauseCombo');
         const endTitle = document.getElementById('endTitle');
-        const resultsStatus = document.getElementById('resultsStatus');
+        constresultsStatus = document.getElementById('resultsStatus');
         const resultsRank = document.getElementById('resultsRank');
         const endScore = document.getElementById('endScore');
         const endPerfects = document.getElementById('endPerfects');
@@ -1259,7 +1291,7 @@
                         heartsContainer.classList.remove('visible');
                         barContainer.classList.remove('visible');
                     }
-                    startGame();
+                    startCountdown();
                 }, 400);
             });
         });
@@ -1293,7 +1325,7 @@
             setTimeout(() => {
                 btnEndRetry.classList.remove('selected-active');
                 endViewport.classList.remove('active');
-                startGame();
+                startCountdown();
             }, 400);
         });
 
@@ -1319,7 +1351,7 @@
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' || e.key === 'Esc') {
-                if (gameViewport.classList.contains('active') && !endViewport.classList.contains('active')) {
+                if (gameViewport.classList.contains('active') && !endViewport.classList.contains('active') && countdownOverlay.style.display !== 'flex') {
                     togglePause();
                 }
             }
@@ -1339,7 +1371,7 @@
                 btnRestart.classList.remove('selected-active');
                 pauseViewport.classList.remove('active');
                 state.isPaused = false;
-                startGame();
+                startCountdown();
             }, 400);
         });
 
@@ -1384,9 +1416,8 @@
             barFill.style.width = `${state.recoveryHealth}%`;
         }
 
-        function startGame() {
-            loadPreferences();
-            state.isPlaying = true;
+        function startCountdown() {
+            state.isPlaying = false;
             state.isPaused = false;
             state.score = 0;
             state.perfects = 0;
@@ -1413,14 +1444,48 @@
             ratingEl.className = 'rating';
             state.notes.forEach(note => note.element.remove());
             state.notes = [];
+            
+            audio.pause();
             audio.currentTime = 0;
+            if (bgVideo.src) {
+                bgVideo.pause();
+                bgVideo.currentTime = 0;
+            }
+
+            countdownOverlay.style.display = 'flex';
+            let count = 3;
+            
+            function runStep() {
+                if (count > 0) {
+                    countdownText.textContent = count;
+                } else if (count === 0) {
+                    countdownText.textContent = "¡Go!";
+                } else {
+                    countdownOverlay.style.display = 'none';
+                    startGame();
+                    return;
+                }
+                
+                countdownText.classList.remove('pop');
+                void countdownText.offsetWidth;
+                countdownText.classList.add('pop');
+                
+                count--;
+                setTimeout(runStep, 1000);
+            }
+            
+            runStep();
+        }
+
+        function startGame() {
+            loadPreferences();
+            state.isPlaying = true;
             
             const savedSong = localStorage.getItem('selectedSong');
             if (savedSong) {
                 const songData = JSON.parse(savedSong);
                 if (songData.video) {
                     bgVideo.style.display = 'block';
-                    bgVideo.currentTime = 0;
                     bgVideo.play().catch(()=>{});
                 } else {
                     bgVideo.style.display = 'none';
@@ -1440,12 +1505,11 @@
             icon.className = `arrow-icon ${dirClasses[col]}`;
             noteEl.appendChild(icon);
             tracks[col].appendChild(noteEl);
-            const startY = window.innerHeight;
-            noteEl.style.transform = `translate3d(-50%, ${startY}px, 0)`;
+            noteEl.style.transform = `translate3d(-50%, ${CONFIG.spawnStartY}px, 0px)`;
             state.notes.push({
                 element: noteEl,
                 col: col,
-                y: startY,
+                y: CONFIG.spawnStartY,
                 targetTime: targetTime
             });
         }
@@ -1663,8 +1727,7 @@
                 state.nextNoteIndex++;
             }
             
-            const spawnStartY = window.innerHeight;
-            const totalTravelDistance = spawnStartY - CONFIG.targetY;
+            const totalTravelDistance = CONFIG.spawnStartY - CONFIG.targetY;
             
             for (let i = state.notes.length - 1; i >= 0; i--) {
                 const note = state.notes[i];
@@ -1677,7 +1740,7 @@
                     note.y = CONFIG.targetY - Math.abs((timeLeft / currentPreSpawnTime) * totalTravelDistance);
                 }
                 
-                note.element.style.transform = `translate3d(-50%, ${note.y}px, 0)`;
+                note.element.style.transform = `translate3d(-50%, ${note.y}px, 0px)`;
                 
                 if (note.y < -64) {
                     triggerMiss();
