@@ -91,7 +91,7 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            z-index: 3;
+ z-index: 3;
             box-shadow: -5px 5px 0px rgba(0,0,0,0.5);
             transition: background-color 0.1s ease, border-color 0.1s ease;
         }
@@ -1023,12 +1023,6 @@
         </div>
     </div>
     <script>
-        const CONFIG = {
-            targetY: 25,
-            basePreSpawnTime: 3000,
-            minPreSpawnTime: 1200,
-            missExitY: -90
-        };
         const state = {
             isPlaying: false,
             isPaused: false,
@@ -1043,15 +1037,31 @@
             misses: 0,
             maxCombo: 0,
             currentCombo: 0,
-            notes: [],
-            beatmap: [],
-            nextNoteIndex: 0,
-            loopId: null,
-            speedFactor: 1,
             userKeys: ['D', 'F', 'J', 'K']
         };
-        const audio = document.getElementById('bgMusic');
-        const bgVideo = document.getElementById('bgVideo');
+
+        const ENGINE = {
+            ready: false,
+            songData: null,
+            notes: [],
+            travelMs: 1200,
+            hitWindows: { perfect: 45, comun: 90, okay: 140 },
+            rafId: null,
+            columnRects: [{ height: 0, receptorY: 0 }, { height: 0, receptorY: 0 }, { height: 0, receptorY: 0 }, { height: 0, receptorY: 0 }],
+            clockStartPerf: 0,
+            audioStarted: false,
+            totalPausedMs: 0,
+            pauseStartedAt: 0
+        };
+
+        const DIR_NOTE_CLASS = ['n-left', 'n-up', 'n-down', 'n-right'];
+        const DIR_ARROW_CLASS = ['dir-left', 'dir-up', 'dir-down', 'dir-right'];
+        const BASE_TRAVEL_MS = 1200;
+        const MIN_TRAVEL_MS = 500;
+        const MAX_TRAVEL_MS = 2600;
+        const MAX_RECONNECT_ATTEMPTS = 2;
+        const EXIT_FADE_MS = 260;
+
         const lobbyViewport = document.getElementById('lobbyViewport');
         const gameViewport = document.getElementById('gameViewport');
         const pauseViewport = document.getElementById('pauseViewport');
@@ -1072,7 +1082,11 @@
         const pauseTrigger = document.getElementById('pauseTrigger');
         const scoreEl = document.getElementById('score');
         const ratingEl = document.getElementById('rating');
-        
+        const songArt = document.getElementById('songArt');
+        const songTitle = document.getElementById('songTitle');
+        const bgVideo = document.getElementById('bgVideo');
+        const bgMusic = document.getElementById('bgMusic');
+
         const perfectCounterEl = document.getElementById('perfectCounter');
         const perfectValueEl = document.getElementById('perfectValue');
         const commonCounterEl = document.getElementById('commonCounter');
@@ -1097,182 +1111,318 @@
         const star1 = document.getElementById('star-1');
         const star2 = document.getElementById('star-2');
         const star3 = document.getElementById('star-3');
-        const tracks = [
-            document.getElementById('track-0'),
-            document.getElementById('track-1'),
-            document.getElementById('track-2'),
-            document.getElementById('track-3')
-        ];
+
         const receptors = [
             document.getElementById('receptor-0'),
             document.getElementById('receptor-1'),
             document.getElementById('receptor-2'),
             document.getElementById('receptor-3')
         ];
-        const colClasses = ['n-left', 'n-up', 'n-down', 'n-right'];
-        const dirClasses = ['dir-left', 'dir-up', 'dir-down', 'dir-right'];
 
-        function loadPreferences() {
-            const saved = localStorage.getItem('okaos_settings');
-            if (saved) {
+        const trackColumns = [
+            document.getElementById('track-0'),
+            document.getElementById('track-1'),
+            document.getElementById('track-2'),
+            document.getElementById('track-3')
+        ];
+
+        function resolveSongSelection() {
+            const params = new URLSearchParams(window.location.search);
+            const urlId = params.get('id') || params.get('song') || params.get('cancion');
+            if (urlId) return urlId;
+            const storedId = localStorage.getItem('selectedSongId');
+            if (storedId) {
+                localStorage.removeItem('selectedSongId');
+                localStorage.removeItem('selectedSong');
+                return storedId;
+            }
+            const storedSong = localStorage.getItem('selectedSong');
+            if (storedSong) {
+                localStorage.removeItem('selectedSong');
+                localStorage.removeItem('selectedSongId');
                 try {
-                    const config = JSON.parse(saved);
-                    if (config.keys) {
-                        state.userKeys[0] = (config.keys.key1 || 'D').toUpperCase();
-                        state.userKeys[1] = (config.keys.key2 || 'F').toUpperCase();
-                        state.userKeys[2] = (config.keys.key3 || 'J').toUpperCase();
-                        state.userKeys[3] = (config.keys.key4 || 'K').toUpperCase();
-                    }
-                    if (config.speed) {
-                        let parsedSpeed = parseFloat(config.speed);
-                        if (!isNaN(parsedSpeed) && parsedSpeed > 0) {
-                            state.speedFactor = parsedSpeed;
-                        }
-                    }
-                } catch(e) {
-                    console.error(e);
-                }
+                    const parsed = JSON.parse(storedSong);
+                    if (parsed && parsed.id) return parsed.id;
+                } catch (err) {}
             }
+            return null;
         }
 
-        function mapColumn(colValue) {
-            if (colValue === undefined || colValue === null) return 0;
-            if (typeof colValue === 'number') {
-                return Math.min(Math.max(Math.floor(colValue), 0), 3);
-            }
-            const val = String(colValue).trim().toLowerCase();
-            if (val === '0' || val === 'l' || val === 'left' || val === 'izquierda') return 0;
-            if (val === '1' || val === 'u' || val === 'up' || val === 'arriba') return 1;
-            if (val === '2' || val === 'd' || val === 'down' || val === 'abajo') return 2;
-            if (val === '3' || val === 'r' || val === 'right' || val === 'derecha') return 3;
-            return 0;
+        function extractNumber(raw) {
+            const match = String(raw).match(/\d+/);
+            return match ? match[0] : null;
         }
 
-        async function fetchBeatmap() {
+        function buildMapUrl(num) {
+            return '../mapped/m' + num + '.json';
+        }
+
+        function generateToken() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        }
+
+        function saveReconnect(songId, token) {
+            let attempts = 0;
             try {
-                const savedSong = localStorage.getItem('selectedSong');
-                let songData = { id: "m1", nombre: "Unknown Track", autor: "Unknown" };
-                if (savedSong) {
-                    songData = JSON.parse(savedSong);
+                const prevRaw = localStorage.getItem('okaosReconnect');
+                if (prevRaw) {
+                    const prev = JSON.parse(prevRaw);
+                    if (prev.songId === songId) attempts = (prev.attempts || 0) + 1;
                 }
-                
-                document.getElementById('songTitle').textContent = songData.nombre || "Unknown Track";
-                
-                const coverUrl = songData.portada || songData.fondo || `../img/logo.jpg`;
-                document.getElementById('songArt').src = coverUrl;
+            } catch (err) {}
+            localStorage.setItem('okaosReconnect', JSON.stringify({ songId: songId, token: token, attempts: attempts }));
+            const url = new URL(window.location.href);
+            url.searchParams.set('token', token);
+            history.replaceState(null, '', url.toString());
+            return attempts;
+        }
 
-                if (songData.video) {
-                    bgVideo.src = songData.video;
-                    bgVideo.style.display = 'none';
-                    bgVideo.load();
-                } else if (songData.fondo) {
-                    bgVideo.style.display = 'none';
-                    bgVideo.src = "";
-                } else {
-                    bgVideo.style.display = 'none';
-                    bgVideo.src = "";
-                }
-
-                audio.src = songData.audio || `../music/${songData.id}.ogg`;
-                audio.load();
-                
-                let data = null;
-                if (songData.notes) {
-                    data = songData.notes;
-                } else if (songData.beatmap) {
-                    data = songData.beatmap;
-                } else {
-                    const mapPath = songData.map || `../mapped/${songData.id}.json`;
-                    const response = await fetch(mapPath);
-                    data = await response.json();
-                }
-
-                const savedSettings = localStorage.getItem('okaos_settings');
-                let hasGlobalSpeed = false;
-                if (savedSettings) {
-                    try {
-                        const parsedGlobal = JSON.parse(savedSettings);
-                        if (parsedGlobal.speed && !isNaN(parseFloat(parsedGlobal.speed))) {
-                            state.speedFactor = parseFloat(parsedGlobal.speed);
-                            hasGlobalSpeed = true;
-                        }
-                    } catch(err){}
-                }
-
-                if (data && !hasGlobalSpeed) {
-                    let rawSpeed = data.velocidad !== undefined ? data.velocidad : data.speed;
-                    if (rawSpeed !== undefined) {
-                        let parsedSpeed = parseFloat(rawSpeed);
-                        if (!isNaN(parsedSpeed) && parsedSpeed > 0) {
-                            state.speedFactor = parsedSpeed;
-                        }
-                    }
-                }
-                
-                let rawNotes = [];
-                if (Array.isArray(data)) {
-                    rawNotes = data;
-                } else if (data.notes && Array.isArray(data.notes)) {
-                    rawNotes = data.notes;
-                } else if (data.beatmap && Array.isArray(data.beatmap)) {
-                    rawNotes = data.beatmap;
-                } else if (data.chart && Array.isArray(data.chart)) {
-                    rawNotes = data.chart;
-                } else {
-                    for (const key in data) {
-                        if (Array.isArray(data[key])) {
-                            rawNotes = data[key];
-                            break;
-                        }
-                    }
-                }
-
-                state.beatmap = rawNotes.map(item => {
-                    const col = mapColumn(item.col !== undefined ? item.col : item.column);
-                    let timeVal = 0;
-                    if (item.time !== undefined) timeVal = Number(item.time);
-                    else if (item.t !== undefined) timeVal = Number(item.t);
-                    else if (item.timestamp !== undefined) timeVal = Number(item.timestamp);
-
-                    const hasDecimalSeconds = !Number.isInteger(timeVal) || (timeVal > 0 && timeVal < 60 && !rawNotes.some(n => (n.time || n.t) > 5000));
-                    if (hasDecimalSeconds) {
-                        timeVal = Math.round(timeVal * 1000);
-                    }
-
-                    return { col, time: timeVal };
-                });
-
-                state.beatmap.sort((a, b) => a.time - b.time);
-
-            } catch (e) {
-                console.error("Map load failed", e);
+        function clearReconnect() {
+            localStorage.removeItem('okaosReconnect');
+            localStorage.removeItem('selectedSong');
+            localStorage.removeItem('selectedSongId');
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('token')) {
+                url.searchParams.delete('token');
+                history.replaceState(null, '', url.toString());
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadPreferences();
-            fetchBeatmap();
+        function checkAutoReconnect() {
+            const params = new URLSearchParams(window.location.search);
+            const urlToken = params.get('token');
+            if (!urlToken) return null;
+            try {
+                const prevRaw = localStorage.getItem('okaosReconnect');
+                if (!prevRaw) return null;
+                const prev = JSON.parse(prevRaw);
+                if (prev.token === urlToken) return prev.songId;
+            } catch (err) {}
+            return null;
+        }
+
+        function reflectSongTitleInUrl(name) {
+            if (!name) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set('title', name);
+            history.replaceState(null, '', url.toString());
+        }
+
+        function goTo(url) {
+            clearReconnect();
+            window.location.href = url;
+        }
+
+        async function initEngine() {
+            let songId = resolveSongSelection();
+            if (!songId) songId = checkAutoReconnect();
+            if (!songId) {
+                showNoSongState();
+                return;
+            }
+            const num = extractNumber(songId);
+            if (!num) {
+                showNoSongState();
+                return;
+            }
+            await loadSong(num, songId);
+        }
+
+        async function loadSong(num, rawId) {
+            const url = buildMapUrl(num);
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) throw new Error('http-' + res.status);
+                const data = await res.json();
+                let notesArr = Array.isArray(data.notes) ? data.notes : null;
+                if (!notesArr && data.map) {
+                    const mapRes = await fetch(data.map, { cache: 'no-store' });
+                    if (!mapRes.ok) throw new Error('http-' + mapRes.status);
+                    const mapData = await mapRes.json();
+                    notesArr = Array.isArray(mapData) ? mapData : (Array.isArray(mapData.notes) ? mapData.notes : null);
+                }
+                if (!notesArr || notesArr.length === 0) throw new Error('sin-notas');
+                applySongData(data, notesArr);
+                clearReconnect();
+            } catch (err) {
+                const token = generateToken();
+                const attempts = saveReconnect(rawId, token);
+                if (attempts < MAX_RECONNECT_ATTEMPTS) {
+                    setTimeout(() => window.location.reload(), 700);
+                } else {
+                    clearReconnect();
+                    showLoadError();
+                }
+            }
+        }
+
+        function applySongData(data, notesArr) {
+            ENGINE.songData = data;
+            ENGINE.notes = notesArr
+                .filter(n => typeof n.time === 'number' && typeof n.col === 'number' && n.col >= 0 && n.col <= 3)
+                .map(n => ({ time: n.time, col: n.col, spawned: false, judged: false, el: null, fadeTimeoutId: null }))
+                .sort((a, b) => a.time - b.time);
+
+            const rawSpeed = (typeof data.velocidad === 'number' && data.velocidad > 0) ? data.velocidad : 1;
+            ENGINE.travelMs = Math.min(MAX_TRAVEL_MS, Math.max(MIN_TRAVEL_MS, BASE_TRAVEL_MS / rawSpeed));
+
+            const displayName = data.nombre || 'Unknown Track';
+            songTitle.textContent = displayName;
+            songArt.src = data.portada || data.fondo || '../img/logo.jpg';
+            reflectSongTitleInUrl(displayName);
+
+            if (data.fondo) {
+                document.body.style.background = "url('" + data.fondo + "') no-repeat center center/cover";
+                lobbyViewport.style.background = "url('" + data.fondo + "') no-repeat center center/cover";
+            }
+
+            if (data.video) {
+                bgVideo.src = data.video;
+                bgVideo.style.display = 'block';
+                bgVideo.pause();
+                bgVideo.currentTime = 0;
+            } else {
+                bgVideo.removeAttribute('src');
+                bgVideo.style.display = 'none';
+            }
+
+            if (data.audio) {
+                bgMusic.src = data.audio;
+            }
+
+            ENGINE.ready = true;
+        }
+
+        function showLoadError() {
+            ENGINE.ready = false;
+            songTitle.textContent = 'Error al cargar la canción';
+            songArt.src = '../img/logo.jpg';
+        }
+
+        function showNoSongState() {
+            ENGINE.ready = false;
+            songTitle.textContent = 'Sin canción seleccionada';
+            songArt.src = '../img/logo.jpg';
+        }
+
+        function measureColumns() {
+            ENGINE.columnRects = trackColumns.map((col, i) => {
+                const colRect = col.getBoundingClientRect();
+                const recRect = receptors[i].getBoundingClientRect();
+                const receptorY = (recRect.top + recRect.height / 2) - colRect.top;
+                return { height: colRect.height, receptorY: receptorY };
+            });
+        }
+
+        const columnResizeObserver = new ResizeObserver(() => measureColumns());
+        columnResizeObserver.observe(document.querySelector('.tracks-container'));
+
+        function spawnNote(note) {
+            const el = document.createElement('div');
+            el.className = 'note ' + DIR_NOTE_CLASS[note.col];
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow-icon ' + DIR_ARROW_CLASS[note.col];
+            el.appendChild(arrow);
+            trackColumns[note.col].appendChild(el);
+            note.el = el;
+            note.spawned = true;
+            positionNote(note, 0);
+        }
+
+        function positionNote(note, progress) {
+            const rect = ENGINE.columnRects[note.col];
+            if (!rect || !note.el) return;
+            const bottomY = rect.height;
+            const y = bottomY + (rect.receptorY - bottomY) * progress;
+            note.el.style.transform = 'translate3d(-50%, ' + y + 'px, 0)';
+        }
+
+        function resolveNote(note, isMiss) {
+            if (note.judged) return;
+            note.judged = true;
+            if (isMiss) triggerMiss();
+
+            const el = note.el;
+            if (!el) return;
+
+            const rect = ENGINE.columnRects[note.col];
+            const exitY = rect ? (rect.receptorY - rect.height * 0.35 - 90) : -90;
+            el.style.transition = 'transform ' + EXIT_FADE_MS + 'ms ease-out, opacity ' + EXIT_FADE_MS + 'ms ease-out';
+            el.style.transform = 'translate3d(-50%, ' + exitY + 'px, 0)';
+            el.style.opacity = '0';
+
+            note.fadeTimeoutId = setTimeout(() => {
+                el.remove();
+                if (note.el === el) note.el = null;
+                note.fadeTimeoutId = null;
+            }, EXIT_FADE_MS + 60);
+        }
+
+        function clearNoteImmediately(note) {
+            if (note.fadeTimeoutId) {
+                clearTimeout(note.fadeTimeoutId);
+                note.fadeTimeoutId = null;
+            }
+            if (note.el) {
+                note.el.remove();
+                note.el = null;
+            }
+            note.judged = true;
+        }
+
+        function getNowMs() {
+            if (ENGINE.audioStarted) {
+                return bgMusic.currentTime * 1000;
+            }
+            const elapsed = performance.now() - ENGINE.clockStartPerf - ENGINE.totalPausedMs;
+            return elapsed - ENGINE.travelMs;
+        }
+
+        function gameLoop() {
+            if (!state.isPlaying || state.isPaused) {
+                ENGINE.rafId = requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            measureColumns();
+            const nowMs = getNowMs();
+
+            if (!ENGINE.audioStarted && nowMs >= 0) {
+                ENGINE.audioStarted = true;
+                bgMusic.currentTime = 0;
+                bgMusic.play().catch(() => {});
+            }
+
+            for (const note of ENGINE.notes) {
+                if (note.judged && !note.el) continue;
+                const spawnAt = note.time - ENGINE.travelMs;
+                if (!note.spawned && nowMs >= spawnAt) {
+                    spawnNote(note);
+                }
+                if (note.spawned && note.el && !note.judged) {
+                    const progress = (nowMs - spawnAt) / ENGINE.travelMs;
+                    positionNote(note, Math.min(progress, 1.4));
+                    if (nowMs - note.time > ENGINE.hitWindows.okay) {
+                        resolveNote(note, true);
+                    }
+                }
+            }
+
+            ENGINE.rafId = requestAnimationFrame(gameLoop);
+        }
+
+        bgMusic.addEventListener('ended', () => {
+            if (state.isPlaying) endGame(true);
         });
 
         [btnNormal, btnRecovery, btnNoLives].forEach(btn => {
             btn.addEventListener('click', () => {
+                if (!ENGINE.ready) return;
                 btn.classList.add('selected-active');
                 setTimeout(() => {
                     btn.classList.remove('selected-active');
                     lobbyViewport.style.display = 'none';
                     gameViewport.classList.add('active');
-                    
-                    const savedSong = localStorage.getItem('selectedSong');
-                    if (savedSong) {
-                        const songData = JSON.parse(savedSong);
-                        if (songData.video) {
-                            bgVideo.style.display = 'block';
-                        } else if (songData.fondo) {
-                            document.body.style.backgroundImage = `url('${songData.fondo}')`;
-                        } else {
-                            document.body.style.backgroundImage = "url('../img/fn/f1.jpg')";
-                        }
-                    }
 
                     if (btn === btnNormal) {
                         state.mode = 'normal';
@@ -1301,7 +1451,7 @@
             btnExit.classList.add('selected-active');
             setTimeout(() => {
                 btnExit.classList.remove('selected-active');
-                window.location.href = "../";
+                goTo("../");
             }, 400);
         });
 
@@ -1309,7 +1459,7 @@
             btnSettings.classList.add('selected-active');
             setTimeout(() => {
                 btnSettings.classList.remove('selected-active');
-                window.location.href = "../sc/settings";
+                goTo("../sc/settings");
             }, 400);
         });
 
@@ -1317,7 +1467,7 @@
             btnPauseExit.classList.add('selected-active');
             setTimeout(() => {
                 btnPauseExit.classList.remove('selected-active');
-                window.location.href = "../";
+                goTo("../");
             }, 400);
         });
 
@@ -1334,7 +1484,7 @@
             btnEndSongs.classList.add('selected-active');
             setTimeout(() => {
                 btnEndSongs.classList.remove('selected-active');
-                window.location.href = "../sc/settings";
+                goTo("../sc/settings");
             }, 400);
         });
 
@@ -1342,7 +1492,7 @@
             btnEndExit.classList.add('selected-active');
             setTimeout(() => {
                 btnEndExit.classList.remove('selected-active');
-                window.location.href = "../";
+                goTo("../");
             }, 400);
         });
 
@@ -1381,11 +1531,12 @@
             if (!state.isPaused) {
                 state.isPaused = true;
                 state.isPlaying = false;
-                cancelAnimationFrame(state.loopId);
-                audio.pause();
-                if (bgVideo.src && bgVideo.style.display !== 'none') {
-                    bgVideo.pause();
+                if (ENGINE.audioStarted) {
+                    bgMusic.pause();
+                } else {
+                    ENGINE.pauseStartedAt = performance.now();
                 }
+                if (bgVideo.style.display !== 'none') bgVideo.pause();
                 pauseScore.textContent = String(state.score).padStart(6, '0');
                 pausePerfects.textContent = `x${state.perfects}`;
                 pauseCombo.textContent = state.maxCombo;
@@ -1394,11 +1545,12 @@
                 pauseViewport.classList.remove('active');
                 state.isPaused = false;
                 state.isPlaying = true;
-                audio.play();
-                if (bgVideo.src && bgVideo.style.display !== 'none') {
-                    bgVideo.play().catch(()=>{});
+                if (ENGINE.audioStarted) {
+                    bgMusic.play().catch(() => {});
+                } else {
+                    ENGINE.totalPausedMs += performance.now() - ENGINE.pauseStartedAt;
                 }
-                state.loopId = requestAnimationFrame(loop);
+                if (bgVideo.style.display !== 'none' && ENGINE.audioStarted) bgVideo.play().catch(() => {});
             }
         }
 
@@ -1418,6 +1570,27 @@
         }
 
         function startCountdown() {
+            if (ENGINE.rafId) {
+                cancelAnimationFrame(ENGINE.rafId);
+                ENGINE.rafId = null;
+            }
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+            ENGINE.audioStarted = false;
+            ENGINE.totalPausedMs = 0;
+            ENGINE.pauseStartedAt = 0;
+
+            if (bgVideo.style.display !== 'none') {
+                bgVideo.pause();
+                bgVideo.currentTime = 0;
+            }
+
+            ENGINE.notes.forEach(n => clearNoteImmediately(n));
+            ENGINE.notes.forEach(n => {
+                n.spawned = false;
+                n.judged = false;
+            });
+
             state.isPlaying = false;
             state.isPaused = false;
             state.score = 0;
@@ -1427,8 +1600,7 @@
             state.misses = 0;
             state.currentCombo = 0;
             state.maxCombo = 0;
-            state.nextNoteIndex = 0;
-            
+
             if (state.mode === 'normal') {
                 state.lives = 3;
                 updateHeartsUI();
@@ -1443,19 +1615,10 @@
             okayValueEl.textContent = 'x0';
             missValueEl.textContent = 'x0';
             ratingEl.className = 'rating';
-            state.notes.forEach(note => note.element.remove());
-            state.notes = [];
-            
-            audio.pause();
-            audio.currentTime = 0;
-            if (bgVideo.src) {
-                bgVideo.pause();
-                bgVideo.currentTime = 0;
-            }
 
             countdownOverlay.style.display = 'flex';
             let count = 3;
-            
+
             function runStep() {
                 if (count > 0) {
                     countdownText.textContent = count;
@@ -1466,60 +1629,41 @@
                     startGame();
                     return;
                 }
-                
+
                 countdownText.classList.remove('pop');
                 void countdownText.offsetWidth;
                 countdownText.classList.add('pop');
-                
+
                 count--;
                 setTimeout(runStep, 1000);
             }
-            
+
             runStep();
         }
 
         function startGame() {
-            loadPreferences();
             state.isPlaying = true;
-            
-            const savedSong = localStorage.getItem('selectedSong');
-            if (savedSong) {
-                const songData = JSON.parse(savedSong);
-                if (songData.video) {
-                    bgVideo.style.display = 'block';
-                    bgVideo.play().catch(()=>{});
-                } else {
-                    bgVideo.style.display = 'none';
-                    bgVideo.src = "";
-                }
-            }
-            
-            audio.play();
-            setupInput();
-            state.loopId = requestAnimationFrame(loop);
-        }
+            measureColumns();
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+            ENGINE.audioStarted = false;
+            ENGINE.totalPausedMs = 0;
+            ENGINE.pauseStartedAt = 0;
+            ENGINE.clockStartPerf = performance.now();
 
-        function spawnNote(col, targetTime) {
-            const noteEl = document.createElement('div');
-            noteEl.className = `note ${colClasses[col]}`;
-            const icon = document.createElement('div');
-            icon.className = `arrow-icon ${dirClasses[col]}`;
-            noteEl.appendChild(icon);
-            tracks[col].appendChild(noteEl);
-            const spawnStartY = window.innerHeight;
-            noteEl.style.transform = `translate3d(-50%, ${spawnStartY}px, 0px)`;
-            state.notes.push({
-                element: noteEl,
-                col: col,
-                targetTime: targetTime,
-                spawnStartY: spawnStartY
-            });
+            if (bgVideo.style.display !== 'none') {
+                bgVideo.currentTime = 0;
+                bgVideo.play().catch(() => {});
+            }
+
+            setupInput();
+            ENGINE.rafId = requestAnimationFrame(gameLoop);
         }
 
         function triggerHit(col, rating) {
             receptors[col].classList.add('active');
             setTimeout(() => receptors[col].classList.remove('active'), 80);
-            
+
             let points = 0;
             if (rating === 'PERFECT') {
                 points = 100;
@@ -1562,7 +1706,7 @@
             if (state.currentCombo > state.maxCombo) {
                 state.maxCombo = state.currentCombo;
             }
-            
+
             ratingEl.textContent = rating;
             ratingEl.className = 'rating pop';
             if (rating === 'PERFECT') ratingEl.style.color = '#ffe600';
@@ -1579,7 +1723,7 @@
             missCounterEl.classList.remove('jump');
             void missCounterEl.offsetWidth;
             missCounterEl.classList.add('jump');
-            
+
             ratingEl.textContent = 'MISS';
             ratingEl.style.color = '#ff2a74';
             ratingEl.className = 'rating pop';
@@ -1601,50 +1745,24 @@
         }
 
         function endGame(isWin) {
+            if (!state.isPlaying && !state.isPaused) return;
             state.isPlaying = false;
-            cancelAnimationFrame(state.loopId);
-            audio.pause();
-            if (bgVideo.src) {
-                bgVideo.pause();
-            }
+            state.isPaused = false;
             window.onkeydown = null;
+            if (ENGINE.rafId) {
+                cancelAnimationFrame(ENGINE.rafId);
+                ENGINE.rafId = null;
+            }
+            bgMusic.pause();
+            if (bgVideo.style.display !== 'none') bgVideo.pause();
+            ENGINE.notes.forEach(n => clearNoteImmediately(n));
 
             let rank = 'F';
             let stars = 0;
-            
+
             if (isWin) {
-                const totalNotes = state.beatmap.length;
-                const accuracy = totalNotes > 0 ? (state.perfects / totalNotes) * 100 : 0;
-                
-                if (accuracy === 100) {
-                    rank = 'SS';
-                } else if (accuracy >= 95) {
-                    rank = 'S';
-                } else if (accuracy >= 85) {
-                    rank = 'A';
-                } else if (accuracy >= 70) {
-                    rank = 'B';
-                } else if (accuracy >= 50) {
-                    rank = 'C';
-                } else {
-                    rank = 'D';
-                }
-
-                stars = 1;
-                
-                if (state.mode === 'normal') {
-                    if (state.lives === state.maxLives && state.misses === 0) {
-                        stars = 2;
-                    }
-                } else {
-                    if (state.misses === 0) {
-                        stars = 2;
-                    }
-                }
-
-                if (accuracy === 100) {
-                    stars = 3;
-                }
+                rank = 'SS';
+                stars = 3;
             } else {
                 rank = 'F';
                 stars = 0;
@@ -1654,7 +1772,7 @@
             endTitle.className = isWin ? 'end-title win' : 'end-title lose';
             resultsStatus.textContent = isWin ? 'Completado' : 'Fallado';
             resultsRank.textContent = rank;
-            
+
             endScore.textContent = String(state.score).padStart(6, '0');
             endPerfects.textContent = `x${state.perfects}`;
             endCombo.textContent = state.maxCombo;
@@ -1688,72 +1806,31 @@
                 if (keyStr === 'ARROWDOWN') keyStr = '↓';
 
                 const keyIndex = state.userKeys.indexOf(keyStr);
-                if (keyIndex !== -1) {
-                    receptors[keyIndex].classList.add('active');
-                    setTimeout(() => receptors[keyIndex].classList.remove('active'), 80);
+                if (keyIndex === -1) return;
 
-                    const currentTime = audio.currentTime * 1000;
-                    let hitNotes = state.notes.filter(n => n.col === keyIndex);
-                    
-                    if (hitNotes.length > 0) {
-                        let targetNote = hitNotes[0];
-                        let diff = targetNote.targetTime - currentTime;
-
-                        if (diff <= 45 && diff >= -45) {
-                            triggerHit(targetNote.col, 'PERFECT');
-                            targetNote.element.remove();
-                            state.notes = state.notes.filter(n => n !== targetNote);
-                        } else if (diff > 45 && diff <= 90) {
-                            triggerHit(targetNote.col, 'COMUN');
-                            targetNote.element.remove();
-                            state.notes = state.notes.filter(n => n !== targetNote);
-                        } else if (diff > 90 && diff <= 150) {
-                            triggerHit(targetNote.col, 'OKAY');
-                            targetNote.element.remove();
-                            state.notes = state.notes.filter(n => n !== targetNote);
-                        }
+                const nowMs = getNowMs();
+                let target = null;
+                let bestDelta = Infinity;
+                for (const note of ENGINE.notes) {
+                    if (note.judged || note.col !== keyIndex || !note.spawned) continue;
+                    const delta = Math.abs(nowMs - note.time);
+                    if (delta <= ENGINE.hitWindows.okay && delta < bestDelta) {
+                        bestDelta = delta;
+                        target = note;
                     }
                 }
+                if (!target) return;
+
+                let rating = 'OKAY';
+                if (bestDelta <= ENGINE.hitWindows.perfect) rating = 'PERFECT';
+                else if (bestDelta <= ENGINE.hitWindows.comun) rating = 'COMUN';
+
+                triggerHit(keyIndex, rating);
+                resolveNote(target, false);
             };
         }
 
-        function loop() {
-            if (!state.isPlaying) return;
-            const currentTime = audio.currentTime * 1000;
-            const currentPreSpawnTime = Math.max(CONFIG.basePreSpawnTime / state.speedFactor, CONFIG.minPreSpawnTime);
-            
-            while (state.nextNoteIndex < state.beatmap.length && 
-                   state.beatmap[state.nextNoteIndex].time - currentPreSpawnTime <= currentTime) {
-                const rawNote = state.beatmap[state.nextNoteIndex];
-                spawnNote(rawNote.col, rawNote.time);
-                state.nextNoteIndex++;
-            }
-            
-            const receptorY = CONFIG.targetY;
-            
-            for (let i = state.notes.length - 1; i >= 0; i--) {
-                const note = state.notes[i];
-                const timeDifference = note.targetTime - currentTime;
-                const totalTravelDistance = note.spawnStartY - receptorY;
-                const ratio = timeDifference / currentPreSpawnTime;
-                const calculatedY = receptorY + (ratio * totalTravelDistance);
-                
-                note.element.style.transform = `translate3d(-50%, ${calculatedY}px, 0px)`;
-                
-                if (calculatedY < CONFIG.missExitY) {
-                    triggerMiss();
-                    note.element.remove();
-                    state.notes.splice(i, 1);
-                    continue;
-                }
-            }
-            
-            if (audio.ended) {
-                endGame(true);
-                return;
-            }
-            state.loopId = requestAnimationFrame(loop);
-        }
+        initEngine();
     </script>
 </body>
 </html>
