@@ -1025,7 +1025,9 @@
     <script>
         const CONFIG = {
             targetY: 25,
-            basePreSpawnTime: 2000
+            basePreSpawnTime: 3000,
+            minPreSpawnTime: 1200,
+            missExitY: -90
         };
         const state = {
             isPlaying: false,
@@ -1718,7 +1720,7 @@
         function loop() {
             if (!state.isPlaying) return;
             const currentTime = audio.currentTime * 1000;
-            const currentPreSpawnTime = CONFIG.basePreSpawnTime / state.speedFactor;
+            const currentPreSpawnTime = Math.max(CONFIG.basePreSpawnTime / state.speedFactor, CONFIG.minPreSpawnTime);
             
             while (state.nextNoteIndex < state.beatmap.length && 
                    state.beatmap[state.nextNoteIndex].time - currentPreSpawnTime <= currentTime) {
@@ -1727,24 +1729,18 @@
                 state.nextNoteIndex++;
             }
             
-            const receptorY = 25;
+            const receptorY = CONFIG.targetY;
             
             for (let i = state.notes.length - 1; i >= 0; i--) {
                 const note = state.notes[i];
                 const timeDifference = note.targetTime - currentTime;
                 const totalTravelDistance = note.spawnStartY - receptorY;
-                
-                let calculatedY;
-                if (timeDifference > 0) {
-                    const ratio = timeDifference / currentPreSpawnTime;
-                    calculatedY = receptorY + (ratio * totalTravelDistance);
-                } else {
-                    calculatedY = receptorY;
-                }
+                const ratio = timeDifference / currentPreSpawnTime;
+                const calculatedY = receptorY + (ratio * totalTravelDistance);
                 
                 note.element.style.transform = `translate3d(-50%, ${calculatedY}px, 0px)`;
                 
-                if (timeDifference < -150) {
+                if (calculatedY < CONFIG.missExitY) {
                     triggerMiss();
                     note.element.remove();
                     state.notes.splice(i, 1);
