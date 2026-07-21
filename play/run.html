@@ -91,10 +91,11 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            z-index: 3;
+ z-index: 3;
             box-shadow: -5px 5px 0px rgba(0,0,0,0.5);
             transition: background-color 0.1s ease, border-color 0.1s ease;
         }
+        .btn-mode .icon-wrapper img,
         .btn-mode .icon-wrapper svg {
             width: 46px;
             height: 46px;
@@ -144,6 +145,9 @@
             background-color: #ffffff;
             border-color: #000000;
         }
+        .btn-mode:hover .icon-wrapper img {
+            filter: brightness(0);
+        }
         .btn-mode:hover .icon-wrapper svg {
             fill: #000000;
         }
@@ -159,13 +163,21 @@
         .btn-mode:hover span {
             text-shadow: none;
         }
+        @keyframes select-pulse {
+            0% { transform: scale(1.03) translate3d(5px, 0, 0); filter: brightness(1); }
+            50% { transform: scale(1.08) translate3d(10px, 0, 0); filter: brightness(1.6); }
+            100% { transform: scale(1.03) translate3d(5px, 0, 0); filter: brightness(1); }
+        }
         .btn-mode.selected-active {
-            transform: scale(1.03) translate3d(5px, 0, 0);
+            animation: select-pulse 0.4s ease-in-out;
             z-index: 15;
         }
         .btn-mode.selected-active .icon-wrapper {
             background-color: #ffffff;
             border-color: #000000;
+        }
+        .btn-mode.selected-active .icon-wrapper img {
+            filter: brightness(0);
         }
         .btn-mode.selected-active .icon-wrapper svg {
             fill: #000000;
@@ -250,6 +262,162 @@
         .game-layout.active {
             opacity: 1;
             pointer-events: auto;
+        }
+        .top-navbar {
+            position: absolute;
+            top: 25px;
+            left: 5%;
+            right: 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 120;
+            width: 90%;
+        }
+        .left-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        .brand-logo {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: #ffffff;
+            text-shadow: -3px 3px 0px #000000;
+        }
+        .counters-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .perfect-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        .common-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #00f2fe;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        .okay-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #39ff14;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        .miss-counter {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #ff2a74;
+            text-shadow: -2px 2px 0px #000000;
+            display: flex;
+            align-items: center;
+        }
+        @keyframes jump {
+            0% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+            50% { transform: translateY(0); }
+            70% { transform: translateY(-2px); }
+            100% { transform: translateY(0); }
+        }
+        .perfect-counter span, .common-counter span, .okay-counter span, .miss-counter span {
+            display: inline-block;
+            margin-left: 5px;
+        }
+        .perfect-counter.jump span, .common-counter.jump span, .okay-counter.jump span, .miss-counter.jump span {
+            animation: jump 0.3s ease-out;
+        }
+        .right-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            max-width: calc((100vw - 450px) / 2 - 5%);
+        }
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .score-container {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: -2px 2px 0px #000000;
+        }
+        .pause-wrapper {
+            width: 54px;
+            height: 54px;
+            background: #141414;
+            border: 3px solid #ffffff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: -3px 3px 0px rgba(0,0,0,0.5);
+            transition: transform 0.1s ease, background-color 0.1s ease, border-color 0.1s ease;
+        }
+        .pause-wrapper:hover {
+            transform: scale(1.05);
+            background: #ffffff;
+            border-color: #000000;
+        }
+        .pause-wrapper:hover .btn-pause {
+            fill: #000000;
+            filter: none;
+        }
+        .btn-pause {
+            width: 32px;
+            height: 32px;
+            fill: #ffffff;
+            filter: drop-shadow(-1px 1px 0px rgba(0,0,0,0.5));
+            transition: fill 0.1s ease;
+        }
+        .hearts-container {
+            display: none;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .hearts-container.visible {
+            display: flex;
+        }
+        .heart-icon {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            filter: drop-shadow(0px 0px 1px rgba(0,0,0,1)) drop-shadow(0px 0px 1px rgba(0,0,0,1));
+        }
+        .bar-container {
+            display: none;
+            width: 180px;
+            height: 24px;
+            background: #222222;
+            border: 3px solid #ffffff;
+            box-shadow: -3px 3px 0px rgba(0,0,0,0.5);
+            margin-top: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .bar-container.visible {
+            display: block;
+        }
+        .bar-fill {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff3366, #ffcc00, #39ff14);
+            transition: width 0.1s ease;
         }
         .tracks-container {
             position: relative;
@@ -341,6 +509,246 @@
         .n-up .arrow-icon { background-color: #00f2fe; filter: drop-shadow(0 0 10px #00f2fe); }
         .n-down .arrow-icon { background-color: #39ff14; filter: drop-shadow(0 0 10px #39ff14); }
         .n-right .arrow-icon { background-color: #ffb800; filter: drop-shadow(0 0 10px #ffb800); }
+        .feedback-overlay {
+            position: absolute;
+            top: 55%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            z-index: 120;
+        }
+        .rating {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-shadow: -2px 2px 0px #000000, 0 0 15px rgba(255, 230, 0, 0.5);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: transform 0.08s ease, opacity 0.08s;
+        }
+        .rating.pop {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        .pause-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            z-index: 200;
+            background: url('../img/fn/f1.jpg') no-repeat center center/cover;
+        }
+        .pause-screen.active {
+            display: flex;
+        }
+        .pause-left-partition {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 20, 0.95) 75%, transparent 75.1%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 8%;
+            position: relative;
+        }
+        .pause-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: -4px 4px 0px #000000;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .pause-menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .pause-right-partition {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 5%;
+        }
+        .stats-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background: rgba(20, 20, 20, 0.85);
+            border: 4px solid #ffffff;
+            border-radius: 20px;
+            padding: 35px;
+            width: 380px;
+            box-shadow: -8px 8px 0px rgba(0,0,0,0.6);
+            transform: rotate(2deg) skewX(-6deg);
+            gap: 20px;
+        }
+        .stats-panel * {
+            transform: skewX(6deg);
+        }
+        .stats-heading {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-transform: uppercase;
+            text-shadow: -2px 2px 0px #000000;
+            border-bottom: 3px dashed rgba(255, 255, 255, 0.2);
+            width: 100%;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: -2px 2px 0px #000000;
+            text-transform: uppercase;
+        }
+        .stat-val {
+            color: #00a2ff;
+        }
+        .stat-val.gold {
+            color: #ffe600;
+        }
+        .btn-mode .icon-wrapper svg.smooth-icon {
+            border-radius: 8px;
+        }
+        .end-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            z-index: 300;
+            background: url('../img/fn/f1.jpg') no-repeat center center/cover;
+        }
+        .end-screen.active {
+            display: flex;
+        }
+        .end-left-partition {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 20, 0.95) 75%, transparent 75.1%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 8%;
+            position: relative;
+        }
+        .end-title {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: -4px 4px 0px #000000;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        .end-title.win {
+            color: #39ff14;
+            text-shadow: -4px 4px 0px #000000, 0 0 15px rgba(57, 255, 20, 0.3);
+        }
+        .end-title.lose {
+            color: #ff2a74;
+            text-shadow: -4px 4px 0px #000000, 0 0 15px rgba(255, 42, 116, 0.3);
+        }
+        .end-menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .end-right-partition {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 5%;
+        }
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(20, 20, 20, 0.85);
+            border: 4px solid #ffffff;
+            border-radius: 20px;
+            padding: 35px;
+            width: 420px;
+            box-shadow: -8px 8px 0px rgba(0,0,0,0.6);
+            transform: rotate(-2deg) skewX(-6deg);
+            gap: 15px;
+            position: relative;
+        }
+        .results-panel * {
+            transform: skewX(6deg);
+        }
+        .results-heading {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffe600;
+            text-transform: uppercase;
+            text-shadow: -2px 2px 0px #000000;
+            border-bottom: 3px dashed rgba(255, 255, 255, 0.2);
+            width: 100%;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .results-rank {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: -5px 0 10px 0;
+            width: 100%;
+            height: 110px;
+        }
+        .rank-img {
+            height: 100px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(-4px 4px 0px rgba(0,0,0,0.6));
+            opacity: 0;
+            transform: scale(0.3) translateY(30px);
+        }
+        .results-stars {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .star-item {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            opacity: 0;
+            transform: scale(0.3) translateY(30px);
+            filter: grayscale(1) brightness(0.45);
+        }
+        .star-item.active {
+            filter: drop-shadow(0 0 8px #ffe600);
+        }
+        @keyframes rank-pop-in {
+            0% { transform: scale(0.3) translateY(30px); opacity: 0; }
+            60% { transform: scale(1.15) translateY(-8px); opacity: 1; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .rank-img.pop-in {
+            animation: rank-pop-in 0.5s ease-out forwards;
+        }
+        .star-item.pop-in {
+            animation: rank-pop-in 0.4s ease-out forwards;
+        }
         .countdown-overlay {
             position: absolute;
             top: 0;
@@ -378,15 +786,42 @@
                 <img src="../img/logo.png" alt="Logo OKAOs">
             </div>
             <div class="menu-container">
-                <div class="btn-mode" id="btnRun">
+                <div class="btn-mode" id="btnNormal">
                     <div class="icon-wrapper">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                        <img src="../img/icons/ic5.png" alt="Normal">
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Normal</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnRecovery">
+                    <div class="icon-wrapper">
+                        <img src="../img/icons/ic6.png" alt="Recuperación">
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Recuperación</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnNoLives">
+                    <div class="icon-wrapper">
+                        <img src="../img/icons/ic7.png" alt="Sin Vidas">
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Sin Vidas</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnExit">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M14.08,15.59L16.67,13H7V11H16.67L14.08,8.41L15.5,7L20.5,12L15.5,17L14.08,15.59M19,3A2,2 0 0,1 21,5V9.67L19,7.67V5H5V19H19V16.33L21,14.33V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19Z"/>
                         </svg>
                     </div>
                     <div class="slash-fold"></div>
                     <div class="text-wrapper">
-                        <span>Run</span>
+                        <span>Salir</span>
                     </div>
                 </div>
             </div>
@@ -405,6 +840,35 @@
     <div class="game-layout" id="gameViewport">
         <div class="countdown-overlay" id="countdownOverlay">
             <div class="countdown-text" id="countdownText">3</div>
+        </div>
+        <div class="top-navbar">
+            <div class="left-stats">
+                <div class="brand-logo">OKAOs</div>
+                <div class="counters-grid">
+                    <div class="perfect-counter" id="perfectCounter">Perfects: <span id="perfectValue">x0</span></div>
+                    <div class="common-counter" id="commonCounter">Comunes: <span id="commonValue">x0</span></div>
+                    <div class="okay-counter" id="okayCounter">Okays: <span id="okayValue">x0</span></div>
+                    <div class="miss-counter" id="missCounter">Misses: <span id="missValue">x0</span></div>
+                </div>
+            </div>
+            <div class="right-stats">
+                <div class="score-row">
+                    <div class="score-container" id="score">000000</div>
+                    <div class="pause-wrapper" id="pauseTrigger">
+                        <svg class="btn-pause" viewBox="0 0 24 24">
+                            <path d="M14,19H18V5H14M6,19H10V5H6V19Z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="hearts-container" id="heartsContainer">
+                    <img src="../img/icons/ic8.png" alt="Heart" class="heart-icon">
+                    <img src="../img/icons/ic8.png" alt="Heart" class="heart-icon">
+                    <img src="../img/icons/ic8.png" alt="Heart" class="heart-icon">
+                </div>
+                <div class="bar-container" id="barContainer">
+                    <div class="bar-fill" id="barFill"></div>
+                </div>
+            </div>
         </div>
         <div class="tracks-container">
             <div class="receptors-row">
@@ -434,10 +898,159 @@
             <div class="track-column" id="track-2"></div>
             <div class="track-column" id="track-3"></div>
         </div>
+        <div class="feedback-overlay">
+            <div id="rating" class="rating">PERFECT</div>
+        </div>
+    </div>
+    <div class="pause-screen" id="pauseViewport">
+        <div class="pause-left-partition">
+            <div class="pause-title">Pausa</div>
+            <div class="pause-menu-container">
+                <div class="btn-mode" id="btnResume">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Reanudar</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnRestart">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Reiniciar</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnSettings">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.47,5.34 14.86,5.1L14.47,2.42C14.43,2.19 14.24,2 14,2H10C9.76,2 9.57,2.19 9.53,2.42L9.14,5.1C8.53,5.34 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.95C7.96,18.34 8.53,18.66 9.14,18.9L9.53,21.58C9.57,21.81 9.76,22 10,22H14C14.24,22 14.43,21.81 14.47,21.58L14.86,18.9C15.47,18.66 16.04,18.34 16.56,17.95L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Ajustes</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnPauseExit">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M14.08,15.59L16.67,13H7V11H16.67L14.08,8.41L15.5,7L20.5,12L15.5,17L14.08,15.59M19,3A2,2 0 0,1 21,5V9.67L19,7.67V5H5V19H19V16.33L21,14.33V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Salir</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pause-right-partition">
+            <div class="stats-panel">
+                <div class="stats-heading">Estadísticas</div>
+                <div class="stat-row">
+                    <span>Puntaje</span>
+                    <span class="stat-val gold" id="pauseScore">000000</span>
+                </div>
+                <div class="stat-row">
+                    <span>Perfects</span>
+                    <span class="stat-val" id="pausePerfects">x0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Combo Máx</span>
+                    <span class="stat-val" id="pauseCombo">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="end-screen" id="endViewport">
+        <div class="end-left-partition">
+            <div class="end-title" id="endTitle">Fin de Partida</div>
+            <div class="end-menu-container">
+                <div class="btn-mode" id="btnEndRetry">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Reintentar</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnEndSongs">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M12,3V12.26C11.5,12.09 11,12 10.5,12C8,12 6,14 6,16.5C6,19 8,21 10.5,21C13,21 15,19 15,16.5V6H19V3H12Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Canciones</span>
+                    </div>
+                </div>
+                <div class="btn-mode" id="btnEndExit">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" class="smooth-icon">
+                            <path d="M14.08,15.59L16.67,13H7V11H16.67L14.08,8.41L15.5,7L20.5,12L15.5,17L14.08,15.59M19,3A2,2 0 0,1 21,5V9.67L19,7.67V5H5V19H19V16.33L21,14.33V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19Z"/>
+                        </svg>
+                    </div>
+                    <div class="slash-fold"></div>
+                    <div class="text-wrapper">
+                        <span>Inicio</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="end-right-partition">
+            <div class="results-panel">
+                <div class="results-heading" id="resultsStatus">Completado</div>
+                <div class="results-rank">
+                    <img class="rank-img" id="rankImg" src="" alt="Rank">
+                </div>
+                <div class="results-stars">
+                    <img class="star-item" id="star-1" src="../img/assets/star.png" alt="Estrella">
+                    <img class="star-item" id="star-2" src="../img/assets/star.png" alt="Estrella">
+                    <img class="star-item" id="star-3" src="../img/assets/star.png" alt="Estrella">
+                </div>
+                <div class="stat-row">
+                    <span>Puntaje</span>
+                    <span class="stat-val gold" id="endScore">000000</span>
+                </div>
+                <div class="stat-row">
+                    <span>Perfects</span>
+                    <span class="stat-val" id="endPerfects">x0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Combo Máx</span>
+                    <span class="stat-val" id="endCombo">0</span>
+                </div>
+            </div>
+        </div>
     </div>
     <script>
         const state = {
-            isPlaying: false
+            isPlaying: false,
+            isPaused: false,
+            mode: 'normal',
+            lives: 3,
+            maxLives: 3,
+            recoveryHealth: 50,
+            score: 0,
+            perfects: 0,
+            commons: 0,
+            okays: 0,
+            misses: 0,
+            maxCombo: 0,
+            currentCombo: 0,
+            userKeys: ['D', 'F', 'J', 'K']
         };
 
         const ENGINE = {
@@ -449,7 +1062,9 @@
             rafId: null,
             columnRects: [{ height: 0, receptorY: 0 }, { height: 0, receptorY: 0 }, { height: 0, receptorY: 0 }, { height: 0, receptorY: 0 }],
             clockStartPerf: 0,
-            audioStarted: false
+            audioStarted: false,
+            totalPausedMs: 0,
+            pauseStartedAt: 0
         };
 
         const DIR_NOTE_CLASS = ['n-left', 'n-up', 'n-down', 'n-right'];
@@ -459,16 +1074,66 @@
         const MAX_TRAVEL_MS = 2600;
         const MAX_RECONNECT_ATTEMPTS = 2;
         const EXIT_FADE_MS = 260;
+        const RANK_IMAGES = {
+            F: '../img/assets/ranks/f.png',
+            D: '../img/assets/ranks/d.png',
+            C: '../img/assets/ranks/c.png',
+            B: '../img/assets/ranks/b.png',
+            A: '../img/assets/ranks/a.png',
+            S: '../img/assets/ranks/s.png',
+            SS: '../img/assets/ranks/ss.png',
+            SSS: '../img/assets/ranks/sss.png'
+        };
 
         const lobbyViewport = document.getElementById('lobbyViewport');
         const gameViewport = document.getElementById('gameViewport');
+        const pauseViewport = document.getElementById('pauseViewport');
+        const endViewport = document.getElementById('endViewport');
         const countdownOverlay = document.getElementById('countdownOverlay');
         const countdownText = document.getElementById('countdownText');
-        const btnRun = document.getElementById('btnRun');
+        const btnNormal = document.getElementById('btnNormal');
+        const btnRecovery = document.getElementById('btnRecovery');
+        const btnNoLives = document.getElementById('btnNoLives');
+        const btnExit = document.getElementById('btnExit');
+        const btnResume = document.getElementById('btnResume');
+        const btnRestart = document.getElementById('btnRestart');
+        const btnSettings = document.getElementById('btnSettings');
+        const btnPauseExit = document.getElementById('btnPauseExit');
+        const btnEndRetry = document.getElementById('btnEndRetry');
+        const btnEndSongs = document.getElementById('btnEndSongs');
+        const btnEndExit = document.getElementById('btnEndExit');
+        const pauseTrigger = document.getElementById('pauseTrigger');
+        const scoreEl = document.getElementById('score');
+        const ratingEl = document.getElementById('rating');
         const songArt = document.getElementById('songArt');
         const songTitle = document.getElementById('songTitle');
         const bgVideo = document.getElementById('bgVideo');
         const bgMusic = document.getElementById('bgMusic');
+
+        const perfectCounterEl = document.getElementById('perfectCounter');
+        const perfectValueEl = document.getElementById('perfectValue');
+        const commonCounterEl = document.getElementById('commonCounter');
+        const commonValueEl = document.getElementById('commonValue');
+        const okayCounterEl = document.getElementById('okayCounter');
+        const okayValueEl = document.getElementById('okayValue');
+        const missCounterEl = document.getElementById('missCounter');
+        const missValueEl = document.getElementById('missValue');
+
+        const heartsContainer = document.getElementById('heartsContainer');
+        const barContainer = document.getElementById('barContainer');
+        const barFill = document.getElementById('barFill');
+        const pauseScore = document.getElementById('pauseScore');
+        const pausePerfects = document.getElementById('pausePerfects');
+        const pauseCombo = document.getElementById('pauseCombo');
+        const endTitle = document.getElementById('endTitle');
+        const resultsStatus = document.getElementById('resultsStatus');
+        const rankImg = document.getElementById('rankImg');
+        const endScore = document.getElementById('endScore');
+        const endPerfects = document.getElementById('endPerfects');
+        const endCombo = document.getElementById('endCombo');
+        const star1 = document.getElementById('star-1');
+        const star2 = document.getElementById('star-2');
+        const star3 = document.getElementById('star-3');
 
         const receptors = [
             document.getElementById('receptor-0'),
@@ -564,6 +1229,11 @@
             const url = new URL(window.location.href);
             url.searchParams.set('title', name);
             history.replaceState(null, '', url.toString());
+        }
+
+        function goTo(url) {
+            clearReconnect();
+            window.location.href = url;
         }
 
         async function initEngine() {
@@ -690,9 +1360,10 @@
             note.el.style.transform = 'translate3d(-50%, ' + y + 'px, 0)';
         }
 
-        function resolveNote(note) {
+        function resolveNote(note, isMiss) {
             if (note.judged) return;
             note.judged = true;
+            if (isMiss) triggerMiss();
 
             const el = note.el;
             if (!el) return;
@@ -726,17 +1397,12 @@
             if (ENGINE.audioStarted) {
                 return bgMusic.currentTime * 1000;
             }
-            const elapsed = performance.now() - ENGINE.clockStartPerf;
+            const elapsed = performance.now() - ENGINE.clockStartPerf - ENGINE.totalPausedMs;
             return elapsed - ENGINE.travelMs;
         }
 
-        function triggerHit(col) {
-            receptors[col].classList.add('active');
-            setTimeout(() => receptors[col].classList.remove('active'), 80);
-        }
-
         function gameLoop() {
-            if (!state.isPlaying) {
+            if (!state.isPlaying || state.isPaused) {
                 ENGINE.rafId = requestAnimationFrame(gameLoop);
                 return;
             }
@@ -759,10 +1425,8 @@
                 if (note.spawned && note.el && !note.judged) {
                     const progress = (nowMs - spawnAt) / ENGINE.travelMs;
                     positionNote(note, Math.min(progress, 1.4));
-
-                    if (nowMs >= note.time) {
-                        triggerHit(note.col);
-                        resolveNote(note);
+                    if (nowMs - note.time > ENGINE.hitWindows.okay) {
+                        resolveNote(note, true);
                     }
                 }
             }
@@ -771,22 +1435,162 @@
         }
 
         bgMusic.addEventListener('ended', () => {
-            if (state.isPlaying) {
-                state.isPlaying = false;
-                if (ENGINE.rafId) cancelAnimationFrame(ENGINE.rafId);
-            }
+            if (state.isPlaying) endGame(true);
         });
 
-        btnRun.addEventListener('click', () => {
-            if (!ENGINE.ready) return;
-            btnRun.classList.add('selected-active');
+        [btnNormal, btnRecovery, btnNoLives].forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!ENGINE.ready) return;
+                btn.classList.add('selected-active');
+                setTimeout(() => {
+                    btn.classList.remove('selected-active');
+                    lobbyViewport.style.display = 'none';
+                    gameViewport.classList.add('active');
+
+                    if (btn === btnNormal) {
+                        state.mode = 'normal';
+                        state.lives = 3;
+                        state.maxLives = 3;
+                        updateHeartsUI();
+                        heartsContainer.classList.add('visible');
+                        barContainer.classList.remove('visible');
+                    } else if (btn === btnRecovery) {
+                        state.mode = 'recovery';
+                        state.recoveryHealth = 50;
+                        updateBarUI();
+                        heartsContainer.classList.remove('visible');
+                        barContainer.classList.add('visible');
+                    } else {
+                        state.mode = 'nolives';
+                        heartsContainer.classList.remove('visible');
+                        barContainer.classList.remove('visible');
+                    }
+                    startCountdown();
+                }, 400);
+            });
+        });
+
+        btnExit.addEventListener('click', () => {
+            btnExit.classList.add('selected-active');
             setTimeout(() => {
-                btnRun.classList.remove('selected-active');
-                lobbyViewport.style.display = 'none';
-                gameViewport.classList.add('active');
+                btnExit.classList.remove('selected-active');
+                goTo("../");
+            }, 400);
+        });
+
+        btnSettings.addEventListener('click', () => {
+            btnSettings.classList.add('selected-active');
+            setTimeout(() => {
+                btnSettings.classList.remove('selected-active');
+                goTo("../sc/settings");
+            }, 400);
+        });
+
+        btnPauseExit.addEventListener('click', () => {
+            btnPauseExit.classList.add('selected-active');
+            setTimeout(() => {
+                btnPauseExit.classList.remove('selected-active');
+                goTo("../");
+            }, 400);
+        });
+
+        btnEndRetry.addEventListener('click', () => {
+            btnEndRetry.classList.add('selected-active');
+            setTimeout(() => {
+                btnEndRetry.classList.remove('selected-active');
+                endViewport.classList.remove('active');
                 startCountdown();
             }, 400);
         });
+
+        btnEndSongs.addEventListener('click', () => {
+            btnEndSongs.classList.add('selected-active');
+            setTimeout(() => {
+                btnEndSongs.classList.remove('selected-active');
+                goTo("../sc/settings");
+            }, 400);
+        });
+
+        btnEndExit.addEventListener('click', () => {
+            btnEndExit.classList.add('selected-active');
+            setTimeout(() => {
+                btnEndExit.classList.remove('selected-active');
+                goTo("../");
+            }, 400);
+        });
+
+        pauseTrigger.addEventListener('click', () => {
+            togglePause();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                if (gameViewport.classList.contains('active') && !endViewport.classList.contains('active') && countdownOverlay.style.display !== 'flex') {
+                    togglePause();
+                }
+            }
+        });
+
+        btnResume.addEventListener('click', () => {
+            btnResume.classList.add('selected-active');
+            setTimeout(() => {
+                btnResume.classList.remove('selected-active');
+                togglePause();
+            }, 400);
+        });
+
+        btnRestart.addEventListener('click', () => {
+            btnRestart.classList.add('selected-active');
+            setTimeout(() => {
+                btnRestart.classList.remove('selected-active');
+                pauseViewport.classList.remove('active');
+                state.isPaused = false;
+                startCountdown();
+            }, 400);
+        });
+
+        function togglePause() {
+            if (!state.isPlaying && !state.isPaused) return;
+            if (!state.isPaused) {
+                state.isPaused = true;
+                state.isPlaying = false;
+                if (ENGINE.audioStarted) {
+                    bgMusic.pause();
+                } else {
+                    ENGINE.pauseStartedAt = performance.now();
+                }
+                if (bgVideo.style.display !== 'none') bgVideo.pause();
+                pauseScore.textContent = String(state.score).padStart(6, '0');
+                pausePerfects.textContent = `x${state.perfects}`;
+                pauseCombo.textContent = state.maxCombo;
+                pauseViewport.classList.add('active');
+            } else {
+                pauseViewport.classList.remove('active');
+                state.isPaused = false;
+                state.isPlaying = true;
+                if (ENGINE.audioStarted) {
+                    bgMusic.play().catch(() => {});
+                } else {
+                    ENGINE.totalPausedMs += performance.now() - ENGINE.pauseStartedAt;
+                }
+                if (bgVideo.style.display !== 'none' && ENGINE.audioStarted) bgVideo.play().catch(() => {});
+            }
+        }
+
+        function updateHeartsUI() {
+            const icons = heartsContainer.querySelectorAll('.heart-icon');
+            icons.forEach((icon, i) => {
+                if (i < state.lives) {
+                    icon.style.opacity = '1';
+                } else {
+                    icon.style.opacity = '0.2';
+                }
+            });
+        }
+
+        function updateBarUI() {
+            barFill.style.width = `${state.recoveryHealth}%`;
+        }
 
         function startCountdown() {
             if (ENGINE.rafId) {
@@ -796,6 +1600,8 @@
             bgMusic.pause();
             bgMusic.currentTime = 0;
             ENGINE.audioStarted = false;
+            ENGINE.totalPausedMs = 0;
+            ENGINE.pauseStartedAt = 0;
 
             if (bgVideo.style.display !== 'none') {
                 bgVideo.pause();
@@ -809,6 +1615,29 @@
             });
 
             state.isPlaying = false;
+            state.isPaused = false;
+            state.score = 0;
+            state.perfects = 0;
+            state.commons = 0;
+            state.okays = 0;
+            state.misses = 0;
+            state.currentCombo = 0;
+            state.maxCombo = 0;
+
+            if (state.mode === 'normal') {
+                state.lives = 3;
+                updateHeartsUI();
+            } else if (state.mode === 'recovery') {
+                state.recoveryHealth = 50;
+                updateBarUI();
+            }
+
+            scoreEl.textContent = '000000';
+            perfectValueEl.textContent = 'x0';
+            commonValueEl.textContent = 'x0';
+            okayValueEl.textContent = 'x0';
+            missValueEl.textContent = 'x0';
+            ratingEl.className = 'rating';
 
             countdownOverlay.style.display = 'flex';
             let count = 3;
@@ -841,6 +1670,8 @@
             bgMusic.pause();
             bgMusic.currentTime = 0;
             ENGINE.audioStarted = false;
+            ENGINE.totalPausedMs = 0;
+            ENGINE.pauseStartedAt = 0;
             ENGINE.clockStartPerf = performance.now();
 
             if (bgVideo.style.display !== 'none') {
@@ -848,7 +1679,218 @@
                 bgVideo.play().catch(() => {});
             }
 
+            setupInput();
             ENGINE.rafId = requestAnimationFrame(gameLoop);
+        }
+
+        function triggerHit(col, rating) {
+            receptors[col].classList.add('active');
+            setTimeout(() => receptors[col].classList.remove('active'), 80);
+
+            let points = 0;
+            if (rating === 'PERFECT') {
+                points = 100;
+                state.perfects += 1;
+                perfectValueEl.textContent = `x${state.perfects}`;
+                perfectCounterEl.classList.remove('jump');
+                void perfectCounterEl.offsetWidth;
+                perfectCounterEl.classList.add('jump');
+                if (state.mode === 'recovery') {
+                    state.recoveryHealth = Math.min(100, state.recoveryHealth + 10);
+                    updateBarUI();
+                }
+            } else if (rating === 'COMUN') {
+                points = 50;
+                state.commons += 1;
+                commonValueEl.textContent = `x${state.commons}`;
+                commonCounterEl.classList.remove('jump');
+                void commonCounterEl.offsetWidth;
+                commonCounterEl.classList.add('jump');
+                if (state.mode === 'recovery') {
+                    state.recoveryHealth = Math.min(100, state.recoveryHealth + 5);
+                    updateBarUI();
+                }
+            } else if (rating === 'OKAY') {
+                points = 20;
+                state.okays += 1;
+                okayValueEl.textContent = `x${state.okays}`;
+                okayCounterEl.classList.remove('jump');
+                void okayCounterEl.offsetWidth;
+                okayCounterEl.classList.add('jump');
+                if (state.mode === 'recovery') {
+                    state.recoveryHealth = Math.min(100, state.recoveryHealth + 3);
+                    updateBarUI();
+                }
+            }
+
+            state.score += points;
+            scoreEl.textContent = String(state.score).padStart(6, '0');
+            state.currentCombo += 1;
+            if (state.currentCombo > state.maxCombo) {
+                state.maxCombo = state.currentCombo;
+            }
+
+            ratingEl.textContent = rating;
+            ratingEl.className = 'rating pop';
+            if (rating === 'PERFECT') ratingEl.style.color = '#ffe600';
+            else if (rating === 'COMUN') ratingEl.style.color = '#00f2fe';
+            else if (rating === 'OKAY') ratingEl.style.color = '#39ff14';
+
+            setTimeout(() => ratingEl.classList.remove('pop'), 100);
+        }
+
+        function triggerMiss() {
+            state.currentCombo = 0;
+            state.misses += 1;
+            missValueEl.textContent = `x${state.misses}`;
+            missCounterEl.classList.remove('jump');
+            void missCounterEl.offsetWidth;
+            missCounterEl.classList.add('jump');
+
+            ratingEl.textContent = 'MISS';
+            ratingEl.style.color = '#ff2a74';
+            ratingEl.className = 'rating pop';
+            setTimeout(() => ratingEl.classList.remove('pop'), 100);
+
+            if (state.mode === 'normal') {
+                state.lives--;
+                updateHeartsUI();
+                if (state.lives <= 0) {
+                    endGame(false);
+                }
+            } else if (state.mode === 'recovery') {
+                state.recoveryHealth = Math.max(0, state.recoveryHealth - 10);
+                updateBarUI();
+                if (state.recoveryHealth <= 0) {
+                    endGame(false);
+                }
+            }
+        }
+
+        function endGame(isWin) {
+            if (!state.isPlaying && !state.isPaused) return;
+            state.isPlaying = false;
+            state.isPaused = false;
+            window.onkeydown = null;
+            if (ENGINE.rafId) {
+                cancelAnimationFrame(ENGINE.rafId);
+                ENGINE.rafId = null;
+            }
+            bgMusic.pause();
+            if (bgVideo.style.display !== 'none') bgVideo.pause();
+            ENGINE.notes.forEach(n => clearNoteImmediately(n));
+
+            const totalNotes = ENGINE.notes.length;
+            const maxScore = totalNotes * 100;
+            const accuracy = maxScore > 0 ? state.score / maxScore : 0;
+            const fullPerfect = totalNotes > 0 && state.perfects === totalNotes && state.commons === 0 && state.okays === 0 && state.misses === 0;
+            const noMisses = state.misses === 0;
+
+            let stars = 0;
+            if (state.mode === 'normal' || state.mode === 'recovery') {
+                if (isWin) stars = 1;
+                if (isWin && noMisses) stars = 2;
+                if (isWin && fullPerfect) stars = 3;
+            }
+
+            let rank = 'F';
+            if (isWin) {
+                if (fullPerfect) rank = 'SSS';
+                else if (accuracy >= 0.9 && noMisses) rank = 'SS';
+                else if (accuracy >= 0.8) rank = 'S';
+                else if (accuracy >= 0.65) rank = 'A';
+                else if (accuracy >= 0.5) rank = 'B';
+                else if (accuracy >= 0.35) rank = 'C';
+                else if (accuracy >= 0.15) rank = 'D';
+                else rank = 'F';
+            } else {
+                if (accuracy >= 0.65) rank = 'A';
+                else if (accuracy >= 0.5) rank = 'B';
+                else if (accuracy >= 0.35) rank = 'C';
+                else if (accuracy >= 0.15) rank = 'D';
+                else rank = 'F';
+            }
+
+            endTitle.textContent = isWin ? '¡Victoria!' : 'Fin de Partida';
+            endTitle.className = isWin ? 'end-title win' : 'end-title lose';
+            resultsStatus.textContent = isWin ? 'Completado' : 'Fallado';
+
+            rankImg.src = RANK_IMAGES[rank];
+            rankImg.classList.remove('pop-in');
+            void rankImg.offsetWidth;
+            rankImg.classList.add('pop-in');
+
+            endScore.textContent = String(state.score).padStart(6, '0');
+            endPerfects.textContent = `x${state.perfects}`;
+            endCombo.textContent = state.maxCombo;
+
+            const starEls = [star1, star2, star3];
+            starEls.forEach(el => {
+                el.classList.remove('active', 'pop-in');
+                void el.offsetWidth;
+            });
+
+            if (state.mode === 'nolives') {
+                starEls.forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else {
+                starEls.forEach((el, i) => {
+                    el.style.display = 'block';
+                    if (i < stars) el.classList.add('active');
+                    setTimeout(() => {
+                        el.classList.add('pop-in');
+                    }, 250 + i * 180);
+                });
+            }
+
+            endViewport.classList.add('active');
+        }
+
+        function setupInput() {
+            window.onkeydown = (e) => {
+                if (!state.isPlaying || state.isPaused) {
+                    if (e.key === 'Escape' || e.key === 'Esc') {
+                        togglePause();
+                    }
+                    return;
+                }
+
+                if (e.key === 'Escape' || e.key === 'Esc') {
+                    togglePause();
+                    return;
+                }
+
+                let keyStr = e.key.toUpperCase();
+                if (keyStr === ' ') keyStr = 'SPACE';
+                if (keyStr === 'ARROWLEFT') keyStr = '←';
+                if (keyStr === 'ARROWRIGHT') keyStr = '→';
+                if (keyStr === 'ARROWUP') keyStr = '↑';
+                if (keyStr === 'ARROWDOWN') keyStr = '↓';
+
+                const keyIndex = state.userKeys.indexOf(keyStr);
+                if (keyIndex === -1) return;
+
+                const nowMs = getNowMs();
+                let target = null;
+                let bestDelta = Infinity;
+                for (const note of ENGINE.notes) {
+                    if (note.judged || note.col !== keyIndex || !note.spawned) continue;
+                    const delta = Math.abs(nowMs - note.time);
+                    if (delta <= ENGINE.hitWindows.okay && delta < bestDelta) {
+                        bestDelta = delta;
+                        target = note;
+                    }
+                }
+                if (!target) return;
+
+                let rating = 'OKAY';
+                if (bestDelta <= ENGINE.hitWindows.perfect) rating = 'PERFECT';
+                else if (bestDelta <= ENGINE.hitWindows.comun) rating = 'COMUN';
+
+                triggerHit(keyIndex, rating);
+                resolveNote(target, false);
+            };
         }
 
         initEngine();
