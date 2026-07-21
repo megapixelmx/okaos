@@ -705,13 +705,20 @@
             text-align: center;
         }
         .results-rank {
-            font-size: 5rem;
-            font-weight: 900;
-            color: #ffe600;
-            text-shadow: -4px 4px 0px #000000, 0 0 25px rgba(255, 230, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin: -5px 0 10px 0;
-            text-align: center;
             width: 100%;
+            height: 110px;
+        }
+        .rank-img {
+            height: 100px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(-4px 4px 0px rgba(0,0,0,0.6));
+            opacity: 0;
+            transform: scale(0.3) translateY(30px);
         }
         .results-stars {
             display: flex;
@@ -723,20 +730,24 @@
         .star-item {
             width: 48px;
             height: 48px;
-            background-color: rgba(255, 255, 255, 0.15);
-            -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z'/></svg>");
-            mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z'/></svg>");
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-            transition: background-color 0.3s ease;
+            object-fit: contain;
+            opacity: 0;
+            transform: scale(0.3) translateY(30px);
+            filter: grayscale(1) brightness(0.45);
         }
         .star-item.active {
-            background-color: #ffe600;
             filter: drop-shadow(0 0 8px #ffe600);
+        }
+        @keyframes rank-pop-in {
+            0% { transform: scale(0.3) translateY(30px); opacity: 0; }
+            60% { transform: scale(1.15) translateY(-8px); opacity: 1; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .rank-img.pop-in {
+            animation: rank-pop-in 0.5s ease-out forwards;
+        }
+        .star-item.pop-in {
+            animation: rank-pop-in 0.4s ease-out forwards;
         }
         .countdown-overlay {
             position: absolute;
@@ -1001,11 +1012,13 @@
         <div class="end-right-partition">
             <div class="results-panel">
                 <div class="results-heading" id="resultsStatus">Completado</div>
-                <div class="results-rank" id="resultsRank">SS</div>
+                <div class="results-rank">
+                    <img class="rank-img" id="rankImg" src="" alt="Rank">
+                </div>
                 <div class="results-stars">
-                    <div class="star-item" id="star-1"></div>
-                    <div class="star-item" id="star-2"></div>
-                    <div class="star-item" id="star-3"></div>
+                    <img class="star-item" id="star-1" src="../img/assets/star.png" alt="Estrella">
+                    <img class="star-item" id="star-2" src="../img/assets/star.png" alt="Estrella">
+                    <img class="star-item" id="star-3" src="../img/assets/star.png" alt="Estrella">
                 </div>
                 <div class="stat-row">
                     <span>Puntaje</span>
@@ -1061,6 +1074,16 @@
         const MAX_TRAVEL_MS = 2600;
         const MAX_RECONNECT_ATTEMPTS = 2;
         const EXIT_FADE_MS = 260;
+        const RANK_IMAGES = {
+            F: '../img/assets/ranks/f.png',
+            D: '../img/assets/ranks/d.png',
+            C: '../img/assets/ranks/c.png',
+            B: '../img/assets/ranks/b.png',
+            A: '../img/assets/ranks/a.png',
+            S: '../img/assets/ranks/s.png',
+            SS: '../img/assets/ranks/ss.png',
+            SSS: '../img/assets/ranks/sss.png'
+        };
 
         const lobbyViewport = document.getElementById('lobbyViewport');
         const gameViewport = document.getElementById('gameViewport');
@@ -1104,7 +1127,7 @@
         const pauseCombo = document.getElementById('pauseCombo');
         const endTitle = document.getElementById('endTitle');
         const resultsStatus = document.getElementById('resultsStatus');
-        const resultsRank = document.getElementById('resultsRank');
+        const rankImg = document.getElementById('rankImg');
         const endScore = document.getElementById('endScore');
         const endPerfects = document.getElementById('endPerfects');
         const endCombo = document.getElementById('endCombo');
@@ -1757,29 +1780,69 @@
             if (bgVideo.style.display !== 'none') bgVideo.pause();
             ENGINE.notes.forEach(n => clearNoteImmediately(n));
 
-            let rank = 'F';
-            let stars = 0;
+            const totalNotes = ENGINE.notes.length;
+            const maxScore = totalNotes * 100;
+            const accuracy = maxScore > 0 ? state.score / maxScore : 0;
+            const fullPerfect = totalNotes > 0 && state.perfects === totalNotes && state.commons === 0 && state.okays === 0 && state.misses === 0;
+            const noMisses = state.misses === 0;
 
+            let stars = 0;
+            if (state.mode === 'normal' || state.mode === 'recovery') {
+                if (isWin) stars = 1;
+                if (isWin && noMisses) stars = 2;
+                if (isWin && fullPerfect) stars = 3;
+            }
+
+            let rank = 'F';
             if (isWin) {
-                rank = 'SS';
-                stars = 3;
+                if (fullPerfect) rank = 'SSS';
+                else if (accuracy >= 0.9 && noMisses) rank = 'SS';
+                else if (accuracy >= 0.8) rank = 'S';
+                else if (accuracy >= 0.65) rank = 'A';
+                else if (accuracy >= 0.5) rank = 'B';
+                else if (accuracy >= 0.35) rank = 'C';
+                else if (accuracy >= 0.15) rank = 'D';
+                else rank = 'F';
             } else {
-                rank = 'F';
-                stars = 0;
+                if (accuracy >= 0.65) rank = 'A';
+                else if (accuracy >= 0.5) rank = 'B';
+                else if (accuracy >= 0.35) rank = 'C';
+                else if (accuracy >= 0.15) rank = 'D';
+                else rank = 'F';
             }
 
             endTitle.textContent = isWin ? '¡Victoria!' : 'Fin de Partida';
             endTitle.className = isWin ? 'end-title win' : 'end-title lose';
             resultsStatus.textContent = isWin ? 'Completado' : 'Fallado';
-            resultsRank.textContent = rank;
+
+            rankImg.src = RANK_IMAGES[rank];
+            rankImg.classList.remove('pop-in');
+            void rankImg.offsetWidth;
+            rankImg.classList.add('pop-in');
 
             endScore.textContent = String(state.score).padStart(6, '0');
             endPerfects.textContent = `x${state.perfects}`;
             endCombo.textContent = state.maxCombo;
 
-            star1.classList.toggle('active', stars >= 1);
-            star2.classList.toggle('active', stars >= 2);
-            star3.classList.toggle('active', stars >= 3);
+            const starEls = [star1, star2, star3];
+            starEls.forEach(el => {
+                el.classList.remove('active', 'pop-in');
+                void el.offsetWidth;
+            });
+
+            if (state.mode === 'nolives') {
+                starEls.forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else {
+                starEls.forEach((el, i) => {
+                    el.style.display = 'block';
+                    if (i < stars) el.classList.add('active');
+                    setTimeout(() => {
+                        el.classList.add('pop-in');
+                    }, 250 + i * 180);
+                });
+            }
 
             endViewport.classList.add('active');
         }
