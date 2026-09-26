@@ -86,20 +86,19 @@ window.addEventListener('keydown', (e) => {
 
 const modal = document.getElementById('controlsModal');
 const openBtn = document.getElementById('controlsBtn');
-const closeBtn = document.getElementById('closeModal');
+const closeModal = document.getElementById('closeModal');
 
 openBtn.addEventListener('click', () => {
     modal.classList.add('active');
 });
 
-closeBtn.addEventListener('click', () => {
+closeModal.addEventListener('click', () => {
     modal.classList.remove('active');
 });
 
 const versionModal = document.getElementById('versionModal');
 const versionBtn = document.getElementById('versionBtn');
 const closeVersionBtn = document.getElementById('closeVersionBtn');
-const closeVersionModal = document.getElementById('closeVersionModal');
 
 versionBtn.addEventListener('click', () => {
     versionModal.classList.add('active');
@@ -108,12 +107,6 @@ versionBtn.addEventListener('click', () => {
 closeVersionBtn.addEventListener('click', () => {
     versionModal.classList.remove('active');
 });
-
-if (closeVersionModal) {
-    closeVersionModal.addEventListener('click', () => {
-        versionModal.classList.remove('active');
-    });
-}
 
 const modsBtn = document.getElementById('modsBtn');
 const modsToast = document.getElementById('modsToast');
